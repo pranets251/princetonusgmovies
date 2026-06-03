@@ -61,6 +61,15 @@ export default function LeftNav({ username }: LeftNavProps) {
           <Pencil size={18} />
           Create
         </button>
+
+        {/* Screening callout */}
+        <div className="mt-3 px-3 py-3 rounded-lg border border-zinc-800 bg-white/[0.03]">
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            🎬 Movies with the most{" "}
+            <span className="text-white font-semibold">tagline likes</span>{" "}
+            are considered by Princeton USG for campus screening.
+          </p>
+        </div>
       </div>
 
       {/* Bottom: greeting + three-dot menu */}
