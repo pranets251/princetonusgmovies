@@ -77,7 +77,7 @@ export default function LeftNav({ username }: LeftNavProps) {
 
           {showSignOut && (
             <div
-              className="absolute bottom-8 left-0 rounded-lg border border-zinc-700 overflow-hidden shadow-xl"
+              className="absolute bottom-8 right-0 rounded-lg border border-zinc-700 overflow-hidden shadow-xl"
               style={{ backgroundColor: "var(--card)", minWidth: "160px" }}
             >
               <button
