@@ -23,6 +23,7 @@ body {
   background-color: var(--bg);
   color: white;
   font-family: var(--font-raleway), system-ui, sans-serif;
+  font-weight: 500;
 }
 
 @keyframes heartPop {
