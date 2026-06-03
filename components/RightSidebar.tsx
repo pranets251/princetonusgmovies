@@ -169,6 +169,22 @@ export default function RightSidebar() {
           })}
         </div>
       </div>
+
+      {/* Contact */}
+      <div className="rounded-xl border border-zinc-800 p-4" style={{ backgroundColor: "var(--card)" }}>
+        <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+          Suggestions & concerns
+        </h3>
+        <p className="text-xs text-zinc-500 leading-relaxed">
+          Have a site suggestion or concern? Reach out at{" "}
+          <a
+            href="mailto:ps3514@princeton.edu"
+            className="text-zinc-300 hover:text-white transition-colors"
+          >
+            ps3514@princeton.edu
+          </a>
+        </p>
+      </div>
     </aside>
   )
 }
