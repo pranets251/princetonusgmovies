@@ -65,9 +65,9 @@ export default function LeftNav({ username }: LeftNavProps) {
         {/* Screening callout */}
         <div className="mt-3 px-3 py-3 rounded-lg border border-zinc-800 bg-white/[0.03]">
           <p className="text-xs text-zinc-400 leading-relaxed">
-            🎬 Movies with the most{" "}
-            <span className="text-white font-semibold">tagline likes</span>{" "}
-            are considered by Princeton USG for campus screening.
+            🎬 Tagline and like movies that you want{" "}
+            <span className="text-white font-semibold">USG Movies</span>{" "}
+            to screen for campus!
           </p>
         </div>
       </div>
