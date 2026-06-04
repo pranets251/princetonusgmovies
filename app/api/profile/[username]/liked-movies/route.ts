@@ -19,12 +19,12 @@ export async function GET(
   const likesSnap = await adminDb
     .collection("movie_likes")
     .where("user_email", "==", profileEmail)
-    .where("liked", "==", true)
     .get()
 
   if (likesSnap.empty) return NextResponse.json({ movies: [] })
 
   const tmdbIds = likesSnap.docs
+    .filter(d => (d.data() as any).liked !== false)
     .sort((a, b) => ((b.data() as any).created_at > (a.data() as any).created_at ? 1 : -1))
     .map(d => (d.data() as any).tmdb_id as number)
 
