@@ -117,20 +117,6 @@ export default function BoardThumbnail({ posterPath, taglines, movieTitle, onCli
       {/* Hover overlay — shallow */}
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.16)", opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease", pointerEvents: "none", zIndex: 5 }} />
 
-      {/* Movie title gradient on hover */}
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0,
-        background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 60%)",
-        padding: "24px 10px 9px",
-        opacity: hovered ? 1 : 0,
-        transition: "opacity 0.2s ease",
-        pointerEvents: "none",
-        zIndex: 6,
-      }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em" }}>
-          {title}
-        </span>
-      </div>
 
     </div>
   )
