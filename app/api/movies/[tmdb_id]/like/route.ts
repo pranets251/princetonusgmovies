@@ -10,14 +10,14 @@ export async function GET(
   if (!email) return NextResponse.json({ liked: false, like_count: 0 })
 
   const { tmdb_id } = await params
-  const [likeDoc, boardDoc] = await Promise.all([
+  const [likeDoc, allSnap] = await Promise.all([
     adminDb.collection("movie_likes").doc(`${tmdb_id}_${email}`).get(),
-    adminDb.collection("tagline_boards").doc(tmdb_id).get(),
+    adminDb.collection("movie_likes").where("tmdb_id", "==", Number(tmdb_id)).where("liked", "==", true).get(),
   ])
 
   return NextResponse.json({
-    liked: likeDoc.exists,
-    like_count: Math.max(0, (boardDoc.data() as any)?.like_count ?? 0),
+    liked: likeDoc.exists ? (likeDoc.data() as any).liked === true : false,
+    like_count: allSnap.size,
   })
 }
 
@@ -30,26 +30,13 @@ export async function POST(
 
   const { tmdb_id } = await params
   const likeRef = adminDb.collection("movie_likes").doc(`${tmdb_id}_${email}`)
-  const boardRef = adminDb.collection("tagline_boards").doc(tmdb_id)
 
   const likeSnap = await likeRef.get()
-  const wasLiked = likeSnap.exists
+  const wasLiked = likeSnap.exists ? (likeSnap.data() as any).liked === true : false
+  const newLiked = !wasLiked
 
-  await adminDb.runTransaction(async (tx) => {
-    const boardSnap = await tx.get(boardRef)
-    const current = (boardSnap.data() as any)?.like_count ?? 0
-    if (wasLiked) {
-      tx.delete(likeRef)
-      tx.set(boardRef, { like_count: Math.max(0, current - 1) }, { merge: true })
-    } else {
-      tx.set(likeRef, { tmdb_id: Number(tmdb_id), user_email: email, created_at: new Date().toISOString() })
-      tx.set(boardRef, { like_count: current + 1 }, { merge: true })
-    }
-  })
+  await likeRef.set({ tmdb_id: Number(tmdb_id), user_email: email, liked: newLiked })
 
-  const boardSnap = await boardRef.get()
-  return NextResponse.json({
-    liked: !wasLiked,
-    like_count: Math.max(0, (boardSnap.data() as any)?.like_count ?? 0),
-  })
+  const allSnap = await adminDb.collection("movie_likes").where("tmdb_id", "==", Number(tmdb_id)).where("liked", "==", true).get()
+  return NextResponse.json({ liked: newLiked, like_count: allSnap.size })
 }

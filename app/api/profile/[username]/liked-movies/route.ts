@@ -19,6 +19,7 @@ export async function GET(
   const likesSnap = await adminDb
     .collection("movie_likes")
     .where("user_email", "==", profileEmail)
+    .where("liked", "==", true)
     .get()
 
   if (likesSnap.empty) return NextResponse.json({ movies: [] })
