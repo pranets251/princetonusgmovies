@@ -72,7 +72,7 @@ export default function BoardThumbnail({ posterPath, taglines, movieTitle, onCli
         cursor: onClick ? "pointer" : "default",
         borderRadius: 8,
         flexShrink: 0,
-        outline: `2.25px solid ${outlineColor}`,
+        outline: `3.375px solid ${outlineColor}`,
         transition: "outline-color 0.18s ease",
       }}
     >
