@@ -35,7 +35,7 @@ export async function POST(
   const wasLiked = likeSnap.exists ? (likeSnap.data() as any).liked === true : false
   const newLiked = !wasLiked
 
-  await likeRef.set({ tmdb_id: Number(tmdb_id), user_email: email, liked: newLiked })
+  await likeRef.set({ tmdb_id: Number(tmdb_id), user_email: email, liked: newLiked, created_at: new Date().toISOString() })
 
   const allSnap = await adminDb.collection("movie_likes").where("tmdb_id", "==", Number(tmdb_id)).where("liked", "==", true).get()
   return NextResponse.json({ liked: newLiked, like_count: allSnap.size })

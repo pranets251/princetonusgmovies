@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   const startDate = getStartDate(period)
 
   // Count movie_likes per tmdb_id within the time window
-  let query: FirebaseFirestore.Query = adminDb.collection("movie_likes")
+  let query: FirebaseFirestore.Query = adminDb.collection("movie_likes").where("liked", "==", true)
   if (startDate) query = query.where("created_at", ">=", startDate.toISOString())
   const likesSnap = await query.get()
 
