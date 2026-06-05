@@ -8,11 +8,11 @@ import { Suspense, useState } from "react"
 function LoginInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function handleSignIn() {
-    setError(false)
+    setError(null)
     setLoading(true)
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: "select_account" })
@@ -36,10 +36,10 @@ function LoginInner() {
       const callbackUrl = searchParams.get("callbackUrl") ?? "/"
       window.location.href = callbackUrl
     } catch (err: unknown) {
-      const code = (err as { code?: string }).code
+      const code = (err as { code?: string }).code ?? "unknown"
       if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
         console.error("[auth] signInWithPopup error:", code, err)
-        setError(true)
+        setError(code)
       }
     } finally {
       setLoading(false)
@@ -52,7 +52,7 @@ function LoginInner() {
         <h1 className="text-2xl font-bold text-white">Princeton USG Movies</h1>
         <p className="text-zinc-400 text-sm">Sign in with your @princeton.edu Google account</p>
         {error && (
-          <p className="text-red-400 text-sm">Sign-in failed. Please try again.</p>
+          <p className="text-red-400 text-sm font-mono">{error}</p>
         )}
         <button
           onClick={handleSignIn}
