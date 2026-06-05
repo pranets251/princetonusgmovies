@@ -14,6 +14,7 @@ function LoginInner() {
   useEffect(() => {
     getRedirectResult(auth)
       .then(async (result) => {
+        console.log("[auth] getRedirectResult:", result ? "got result" : "null")
         if (!result) return
         const idToken = await result.user.getIdToken()
         const res = await fetch("/api/auth/session", {
@@ -21,7 +22,10 @@ function LoginInner() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken }),
         })
+        console.log("[auth] session POST status:", res.status)
         if (!res.ok) {
+          const body = await res.text()
+          console.error("[auth] session POST failed:", body)
           await auth.signOut()
           router.push("/unauthorized")
           return
@@ -30,7 +34,10 @@ function LoginInner() {
         sessionStorage.removeItem("authCallbackUrl")
         router.push(callbackUrl)
       })
-      .catch(() => setError(true))
+      .catch((err) => {
+        console.error("[auth] getRedirectResult error:", err?.code, err?.message, err)
+        setError(true)
+      })
       .finally(() => setChecking(false))
   }, [router])
 
