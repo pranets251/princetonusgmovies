@@ -50,7 +50,7 @@ function LoginInner() {
         <p className="text-zinc-400 text-sm">Sign in with your @princeton.edu Google account</p>
         {popupBlocked && (
           <p className="text-yellow-400 text-sm">
-            Chrome blocked the sign-in popup. Try opening this site in an Incognito window, or use Safari or Firefox.
+            If you're using a Google Chrome profile linked with your personal account, please log out or use an incognito window
           </p>
         )}
         <button
