@@ -1,45 +1,18 @@
 "use client"
 
 import { auth } from "@/lib/firebase"
-import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth"
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth"
 import { useSearchParams } from "next/navigation"
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useState } from "react"
 
 function LoginInner() {
   const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  // Handle return from signInWithRedirect (fallback for popup-blocked browsers)
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (!result) return
-        const idToken = await result.user.getIdToken()
-        const res = await fetch("/api/auth/session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken }),
-        })
-        if (!res.ok) {
-          await auth.signOut()
-          window.location.href = "/unauthorized"
-          return
-        }
-        const callbackUrl = sessionStorage.getItem("authCallbackUrl") ?? searchParams.get("callbackUrl") ?? "/"
-        sessionStorage.removeItem("authCallbackUrl")
-        window.location.href = callbackUrl
-      })
-      .catch((err) => {
-        console.error("[auth] getRedirectResult error:", err?.code, err)
-        setError(err?.code ?? "unknown")
-      })
-      .finally(() => setLoading(false))
-  }, [searchParams])
+  const [loading, setLoading] = useState(false)
+  const [popupBlocked, setPopupBlocked] = useState(false)
 
   async function handleSignIn() {
-    setError(null)
     setLoading(true)
+    setPopupBlocked(false)
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: "select_account" })
 
@@ -61,29 +34,24 @@ function LoginInner() {
     } catch (err: unknown) {
       const code = (err as { code?: string }).code
       if (code === "auth/popup-blocked") {
-        // Chrome blocks popups when signed into a Google account — fall back to redirect
-        const callbackUrl = searchParams.get("callbackUrl") ?? "/"
-        sessionStorage.setItem("authCallbackUrl", callbackUrl)
-        const provider = new GoogleAuthProvider()
-        provider.setCustomParameters({ prompt: "select_account" })
-        await signInWithRedirect(auth, provider)
+        setPopupBlocked(true)
       } else if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
         console.error("[auth] signInWithPopup error:", code, err)
-        setError(code ?? "unknown")
-        setLoading(false)
-      } else {
-        setLoading(false)
       }
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center gap-6 max-w-sm text-center px-6">
         <h1 className="text-2xl font-bold text-white">Princeton USG Movies</h1>
         <p className="text-zinc-400 text-sm">Sign in with your @princeton.edu Google account</p>
-        {error && (
-          <p className="text-red-400 text-sm">Sign-in failed. Please try again.</p>
+        {popupBlocked && (
+          <p className="text-yellow-400 text-sm">
+            Chrome blocked the sign-in popup. Try opening this site in an Incognito window, or use Safari or Firefox.
+          </p>
         )}
         <button
           onClick={handleSignIn}
