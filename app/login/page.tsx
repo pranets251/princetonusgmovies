@@ -3,12 +3,17 @@
 import { auth } from "@/lib/firebase"
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth"
 import { useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 
 function LoginInner() {
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [popupBlocked, setPopupBlocked] = useState(false)
+  const [isOrion, setIsOrion] = useState(false)
+
+  useEffect(() => {
+    setIsOrion(navigator.userAgent.includes("Orion"))
+  }, [])
 
   async function handleSignIn() {
     setLoading(true)
@@ -48,6 +53,11 @@ function LoginInner() {
       <div className="flex flex-col items-center gap-6 max-w-sm text-center px-6">
         <h1 className="text-2xl font-bold text-white">Princeton USG Movies</h1>
         <p className="text-zinc-400 text-sm">Sign in with your @princeton.edu Google account</p>
+        {isOrion && (
+          <p className="text-yellow-400 text-sm">
+            Orion's privacy settings block Google sign-in. Please use Safari or Firefox instead.
+          </p>
+        )}
         {popupBlocked && (
           <p className="text-yellow-400 text-sm">
             If you're using a Google Chrome profile linked with your personal account, please log out or use an incognito window
