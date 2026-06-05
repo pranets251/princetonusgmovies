@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from "firebase/app"
-import { getAuth } from "firebase/auth"
+import { initializeApp, getApps, getApp } from "firebase/app"
+import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, getAuth } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 
 const firebaseConfig = {
@@ -11,7 +11,21 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
 
-export const auth = getAuth(app)
+function createAuth() {
+  try {
+    // Explicitly set resolver to bypass Firebase 12's FedCM auto-detection,
+    // which causes immediate failures when Chrome has a personal account active.
+    return initializeAuth(app, {
+      persistence: browserLocalPersistence,
+      popupRedirectResolver: browserPopupRedirectResolver,
+    })
+  } catch {
+    // initializeAuth throws if auth was already initialized (e.g. HMR)
+    return getAuth(app)
+  }
+}
+
+export const auth = createAuth()
 export const db = getFirestore(app)

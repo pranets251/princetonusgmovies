@@ -34,7 +34,7 @@ function LoginInner() {
       }
 
       const callbackUrl = searchParams.get("callbackUrl") ?? "/"
-      router.push(callbackUrl)
+      window.location.href = callbackUrl
     } catch (err: unknown) {
       const code = (err as { code?: string }).code
       if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
