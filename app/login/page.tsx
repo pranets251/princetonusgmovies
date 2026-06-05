@@ -15,7 +15,7 @@ function LoginInner() {
     setError(false)
     setLoading(true)
     const provider = new GoogleAuthProvider()
-    provider.setCustomParameters({ hd: "princeton.edu" })
+    provider.setCustomParameters({ prompt: "select_account" })
 
     try {
       const result = await signInWithPopup(auth, provider)
