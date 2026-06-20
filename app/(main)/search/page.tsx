@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Suspense } from "react"
 import BoardThumbnail from "@/components/BoardThumbnail"
 import DashedMovieCard from "@/components/DashedMovieCard"
+import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
 
 interface TmdbMovie {
@@ -42,6 +43,7 @@ function SearchResults() {
   const [boardTaglines, setBoardTaglines] = useState<Record<number, Tagline[]>>({})
   const [loading, setLoading] = useState(false)
   const [doneQ, setDoneQ] = useState<string | null>(null)
+  const [boardModalTmdbId, setBoardModalTmdbId] = useState<number | null>(null)
   useFonts(Object.values(boardTaglines).flat())
 
   useEffect(() => {
@@ -87,6 +89,7 @@ function SearchResults() {
   )
 
   return (
+    <>
     <div>
       <div className="px-6 py-5 border-b" style={{ borderColor: "var(--border)" }}>
         <h1 className="text-base font-semibold text-white">Results for &ldquo;{q}&rdquo;</h1>
@@ -109,7 +112,7 @@ function SearchResults() {
                     taglines={tags}
                     movieTitle={m.title}
                     tmdbId={m.id}
-                    onClick={() => router.push(`/movie/${m.id}`)}
+                    onClick={() => setBoardModalTmdbId(m.id)}
                   />
                 ) : (
                   <DashedMovieCard
@@ -149,6 +152,14 @@ function SearchResults() {
         </div>
       )}
     </div>
+
+    {boardModalTmdbId !== null && (
+      <TaglineBoardModal
+        tmdbId={boardModalTmdbId}
+        onClose={() => setBoardModalTmdbId(null)}
+      />
+    )}
+    </>
   )
 }
 

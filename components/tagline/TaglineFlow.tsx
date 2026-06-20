@@ -17,9 +17,10 @@ interface TaglineFlowProps {
   movieTitle: string
   initialBoard: Board | null
   existingMarks?: ExistingMark[]
+  username?: string
 }
 
-export default function TaglineFlow({ tmdbId, movieTitle, initialBoard, existingMarks = [] }: TaglineFlowProps) {
+export default function TaglineFlow({ tmdbId, movieTitle, initialBoard, existingMarks = [], username }: TaglineFlowProps) {
   const router = useRouter()
   const [posterPath, setPosterPath] = useState<string | null>(initialBoard?.poster_path ?? null)
 
@@ -45,7 +46,7 @@ export default function TaglineFlow({ tmdbId, movieTitle, initialBoard, existing
       }),
     })
     if (res.ok) {
-      router.push(`/movie/${tmdbId}`)
+      router.push(username ? `/profile/${username}` : "/")
     }
   }
 

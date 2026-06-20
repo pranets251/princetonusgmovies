@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
 import TaglineCard from "@/components/TaglineCard"
+import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
 
 function useFonts(taglines: Tagline[]) {
@@ -40,6 +41,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [ctaHovered, setCtaHovered] = useState(false)
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
+  const [boardModalTmdbId, setBoardModalTmdbId] = useState<number | null>(null)
   const router = useRouter()
   useFonts(taglines)
 
@@ -52,6 +54,7 @@ export default function HomePage() {
   }, [tab])
 
   return (
+    <>
     <div className="flex flex-col h-full">
       {/* Tab bar */}
       <div className="flex border-b sticky top-0 z-10 shrink-0" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
@@ -112,18 +115,26 @@ export default function HomePage() {
                 </p>
               </button>
               {taglines.filter((_, i) => i % 2 === 1).map(t => (
-                <TaglineCard key={t.id} tagline={t} onClick={() => router.push(`/movie/${t.tmdb_id}`)} />
+                <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
               ))}
             </div>
             {/* Right column: taglines[0,2,4…] — most recent at top */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
               {taglines.filter((_, i) => i % 2 === 0).map(t => (
-                <TaglineCard key={t.id} tagline={t} onClick={() => router.push(`/movie/${t.tmdb_id}`)} />
+                <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
               ))}
             </div>
           </div>
         )}
       </div>
     </div>
+
+    {boardModalTmdbId !== null && (
+      <TaglineBoardModal
+        tmdbId={boardModalTmdbId}
+        onClose={() => setBoardModalTmdbId(null)}
+      />
+    )}
+    </>
   )
 }

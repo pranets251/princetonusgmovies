@@ -20,16 +20,15 @@ export async function GET(req: Request) {
 
   const startDate = getStartDate(period)
 
-  // Count movie_likes per tmdb_id within the time window
-  let query: FirebaseFirestore.Query = adminDb.collection("movie_likes")
+  // Count movie_endorsements per tmdb_id within the time window
+  let query: FirebaseFirestore.Query = adminDb.collection("movie_endorsements")
   if (startDate) query = query.where("created_at", ">=", startDate.toISOString())
-  const likesSnap = await query.get()
+  const endorsementsSnap = await query.get()
 
   const counts: Record<number, number> = {}
-  likesSnap.docs.forEach(d => {
+  endorsementsSnap.docs.forEach(d => {
     const data = d.data() as any
-    // treat old docs (no liked field) as liked; new docs use explicit liked boolean
-    if (data.liked === false) return
+    if (data.endorsed === false) return
     const id = data.tmdb_id as number
     if (id) counts[id] = (counts[id] ?? 0) + 1
   })
@@ -61,7 +60,7 @@ export async function GET(req: Request) {
         title: board.movie_title,
         year: tmdbData?.release_date?.slice(0, 4) ?? "",
         poster_path: board.poster_path,
-        like_count: count,
+        endorse_count: count,
         taglines,
       }
     })

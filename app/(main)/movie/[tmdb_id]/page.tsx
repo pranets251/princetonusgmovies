@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Heart, Pencil, Share, User, X } from "lucide-react"
+import { Ticket, Pencil, Share2, User, X } from "lucide-react"
 import { Tagline, BOX_FRAC, TMDB_ORIGINAL } from "@/lib/taglineTypes"
 
 function useFonts(taglines: Tagline[]) {
@@ -23,14 +23,13 @@ export default function MovieBoardPage() {
   const router = useRouter()
 
   const [taglines, setTaglines] = useState<Tagline[]>([])
-  const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(0)
-  const [heartAnim, setHeartAnim] = useState(false)
+  const [endorsed, setEndorsed] = useState(false)
+  const [endorseCount, setEndorseCount] = useState(0)
   const [copied, setCopied] = useState(false)
-  const [pencilHovered, setPencilHovered] = useState(false)
   const [loading, setLoading] = useState(true)
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
   const [showContributors, setShowContributors] = useState(false)
+  const [pressing, setPressing] = useState<"endorse" | "add" | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function openContributors() {
@@ -63,26 +62,25 @@ export default function MovieBoardPage() {
     async function load() {
       const [tagsRes, likeRes] = await Promise.all([
         fetch(`/api/taglines?tmdb_id=${tmdb_id}`),
-        fetch(`/api/movies/${tmdb_id}/like`),
+        fetch(`/api/movies/${tmdb_id}/endorse`),
       ])
       if (tagsRes.ok) setTaglines((await tagsRes.json()).taglines ?? [])
       if (likeRes.ok) {
-        const { liked: l, like_count: lc } = await likeRes.json()
-        setLiked(l); setLikeCount(lc ?? 0)
+        const { endorsed: l, endorse_count: lc } = await likeRes.json()
+        setEndorsed(l); setEndorseCount(lc ?? 0)
       }
       setLoading(false)
     }
     load()
   }, [tmdb_id])
 
-  async function handleLike() {
-    const newLiked = !liked
-    setLiked(newLiked); setLikeCount(c => c + (newLiked ? 1 : -1))
-    setHeartAnim(true); setTimeout(() => setHeartAnim(false), 600)
-    const res = await fetch(`/api/movies/${tmdb_id}/like`, { method: "POST" })
+  async function handleEndorse() {
+    const newEndorsed = !endorsed
+    setEndorsed(newEndorsed); setEndorseCount(c => c + (newEndorsed ? 1 : -1))
+    const res = await fetch(`/api/movies/${tmdb_id}/endorse`, { method: "POST" })
     if (res.ok) {
-      const { liked: l, like_count: lc } = await res.json()
-      setLiked(l); setLikeCount(lc)
+      const { endorsed: l, endorse_count: lc } = await res.json()
+      setEndorsed(l); setEndorseCount(lc)
     }
   }
   function handleAdd() { router.push(`/tagline/${tmdb_id}`) }
@@ -91,7 +89,6 @@ export default function MovieBoardPage() {
     setCopied(true); setTimeout(() => setCopied(false), 2000)
   }
 
-  // Last 10 taglines for the board display; all taglines for the contributor list
   const boardTaglines = useMemo(() =>
     [...taglines].sort((a, b) => (b.created_at > a.created_at ? 1 : -1)).slice(0, 10),
     [taglines]
@@ -107,7 +104,7 @@ export default function MovieBoardPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
 
-      {/* ── Header — no bottom border ── */}
+      {/* ── Header ── */}
       <div
         className="flex items-center justify-between px-5 flex-shrink-0"
         style={{ height: 64 }}
@@ -237,33 +234,68 @@ export default function MovieBoardPage() {
       </div>
 
       {/* ── Action bar ── */}
-      <div className="flex items-center justify-center flex-shrink-0" style={{ height: 68, gap: 96 }}>
-        <button onClick={handleLike} className="flex items-center gap-2.5 group" style={{ background: "none", border: "none", cursor: "pointer" }}>
-          <span className="relative flex items-center justify-center" style={{ width: 40, height: 40 }}>
-            <span className="absolute inset-0 rounded-[10px] opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "rgba(239,68,68,0.15)" }} />
-            <Heart size={22} className={`relative transition-all ${liked ? "fill-red-500 text-red-500" : "text-zinc-400 group-hover:text-red-400"} ${heartAnim ? "heart-pop" : ""}`} />
-          </span>
-          <span className="text-sm font-medium tabular-nums" style={{ color: liked ? "#ef4444" : "#a1a1aa" }}>{likeCount}</span>
-        </button>
-
+      <div className="flex items-center justify-center flex-shrink-0" style={{ height: 76, gap: 12 }}>
+        {/* Endorse */}
         <button
-          onClick={handleAdd}
-          onMouseEnter={() => setPencilHovered(true)}
-          onMouseLeave={() => setPencilHovered(false)}
-          style={{ background: "none", border: "none", cursor: "pointer" }}
+          onMouseDown={() => setPressing("endorse")}
+          onMouseUp={() => setPressing(null)}
+          onMouseLeave={() => setPressing(null)}
+          onClick={handleEndorse}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 22px", borderRadius: 10, border: "none", cursor: "pointer",
+            fontWeight: 700, fontSize: 14, letterSpacing: "0.01em",
+            background: endorsed ? "#dc2626" : "#3f3f46",
+            color: endorsed ? "#fff" : "#ef4444",
+            boxShadow: pressing === "endorse"
+              ? `0 1px 0 ${endorsed ? "#991b1b" : "#27272a"}, 0 2px 4px rgba(0,0,0,0.35)`
+              : `0 4px 0 ${endorsed ? "#991b1b" : "#27272a"}, 0 6px 14px rgba(0,0,0,0.35)`,
+            transform: pressing === "endorse" ? "translateY(3px)" : "translateY(0)",
+            transition: "transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease",
+          }}
         >
-          <span style={{ width: 40, height: 40, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ position: "absolute", inset: 0, borderRadius: 10, background: pencilHovered ? "rgba(245,184,0,0.15)" : "transparent", transition: "background 0.15s ease" }} />
-            <Pencil size={22} style={{ position: "relative", color: pencilHovered ? "#F5B800" : "#a1a1aa", transition: "color 0.15s ease" }} />
-          </span>
+          <Ticket size={18} color={endorsed ? "#fff" : "#ef4444"} />
+          {endorsed ? "Endorsed!" : "Endorse"}
         </button>
 
-        <button onClick={handleShare} className="flex items-center gap-2 group" style={{ background: "none", border: "none", cursor: "pointer" }}>
-          <span className="relative flex items-center justify-center" style={{ width: 40, height: 40 }}>
-            <span className="absolute inset-0 rounded-[10px] opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "rgba(113,113,122,0.2)" }} />
-            <Share size={20} className="relative text-zinc-400 group-hover:text-zinc-200 transition-colors" />
-          </span>
-          {copied && <span className="text-xs text-zinc-400">Copied!</span>}
+        {/* Add tagline */}
+        <button
+          onMouseDown={() => setPressing("add")}
+          onMouseUp={() => setPressing(null)}
+          onMouseLeave={() => { setPressing(null); }}
+          onClick={handleAdd}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 22px", borderRadius: 10, border: "none", cursor: "pointer",
+            fontWeight: 700, fontSize: 14, letterSpacing: "0.01em",
+            background: "#3f3f46",
+            color: "#F5B800",
+            boxShadow: pressing === "add"
+              ? "0 1px 0 #27272a, 0 2px 4px rgba(0,0,0,0.35)"
+              : "0 4px 0 #27272a, 0 6px 14px rgba(0,0,0,0.35)",
+            transform: pressing === "add" ? "translateY(3px)" : "translateY(0)",
+            transition: "transform 0.08s ease, box-shadow 0.08s ease",
+          }}
+        >
+          <Pencil size={18} color="#F5B800" />
+          Add your own tagline
+        </button>
+
+        {/* Share */}
+        <button
+          onClick={handleShare}
+          style={{
+            display: "flex", alignItems: "center", gap: 7,
+            padding: "10px 16px", borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer",
+            background: "transparent",
+            color: copied ? "#a1a1aa" : "#71717a",
+            fontSize: 13, fontWeight: 500,
+            transition: "color 0.15s ease",
+          }}
+        >
+          <Share2 size={16} color={copied ? "#a1a1aa" : "#71717a"} />
+          {copied ? "Copied!" : "Share"}
         </button>
       </div>
     </div>

@@ -59,13 +59,13 @@ export default function LeftNav({ username }: LeftNavProps) {
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold mt-2 bg-white hover:bg-zinc-100 text-black transition-colors"
         >
           <Pencil size={18} />
-          Create
+          Add a Tagline!
         </button>
 
         {/* Screening callout */}
         <div className="mt-3 px-3 py-3 rounded-lg border border-zinc-800 bg-white/[0.03]">
           <p className="text-xs text-zinc-400 leading-relaxed">
-            🎬 Tagline and like movies that you want USG Movies to screen for campus!
+            🎬 Add taglines to your favorite movies&apos; posters and endorse the movies other people have added taglines to on the website so that we can try to screen your favorite films every weekend!
           </p>
         </div>
       </div>

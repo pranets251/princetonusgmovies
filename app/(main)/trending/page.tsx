@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import TaglineCard from "@/components/TaglineCard"
+import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
 
 interface TrendingMovie {
@@ -31,7 +31,7 @@ function useFonts(taglines: Tagline[]) {
 export default function TrendingPage() {
   const [movies, setMovies] = useState<TrendingMovie[]>([])
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [boardModalTmdbId, setBoardModalTmdbId] = useState<number | null>(null)
   const allTaglines = movies.flatMap(m => m.taglines)
   useFonts(allTaglines)
 
@@ -43,6 +43,7 @@ export default function TrendingPage() {
   }, [])
 
   return (
+    <>
     <div className="flex flex-col h-full">
       <div className="px-6 py-5 border-b shrink-0" style={{ borderColor: "var(--border)" }}>
         <h1 className="text-base font-semibold text-white">Trending</h1>
@@ -66,7 +67,7 @@ export default function TrendingPage() {
                   <span className="text-2xl font-bold text-zinc-700 w-8 text-right">{idx + 1}</span>
                   <div>
                     <button
-                      onClick={() => router.push(`/movie/${m.tmdb_id}`)}
+                      onClick={() => setBoardModalTmdbId(m.tmdb_id)}
                       className="text-sm font-semibold text-white hover:underline text-left"
                     >
                       {m.movie_title}
@@ -79,7 +80,7 @@ export default function TrendingPage() {
                 <div style={{ columns: 2, columnGap: 12 }}>
                   {m.taglines.slice(0, 4).map(t => (
                     <div key={t.id} style={{ breakInside: "avoid", marginBottom: 12 }}>
-                      <TaglineCard tagline={t} onClick={() => router.push(`/post/${t.id}`)} />
+                      <TaglineCard tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
                     </div>
                   ))}
                 </div>
@@ -89,5 +90,13 @@ export default function TrendingPage() {
         )}
       </div>
     </div>
+
+    {boardModalTmdbId !== null && (
+      <TaglineBoardModal
+        tmdbId={boardModalTmdbId}
+        onClose={() => setBoardModalTmdbId(null)}
+      />
+    )}
+    </>
   )
 }

@@ -587,15 +587,15 @@ export default function TaglineCreateStep({
         {/* ══ RIGHT: thumbnail preview ══ */}
         <div style={{
           width: THUMB_W + 64,
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end",
-          gap: 12, borderLeft: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, padding: "0 32px 110px",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          gap: 12, borderLeft: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, padding: "0 32px 130px",
         }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#71717a", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              Tagline Thumbnail
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              Tagline Thumbnail Preview
             </p>
-            <p style={{ margin: 0, fontSize: 10, color: "#52525b", fontStyle: "italic", lineHeight: 1.35, textAlign: "center" }}>
-              Text may render slightly differently on the Tagline Board
+            <p style={{ margin: 0, fontSize: 10, color: "#fff", fontStyle: "italic", lineHeight: 1.35, textAlign: "center" }}>
+              Text may render slightly differently on the poster — only the last 10 taglines appear on a poster
             </p>
           </div>
           {/* Scaled clone of the exact boxW × boxH textbox region.

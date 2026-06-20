@@ -1,4 +1,5 @@
 import { adminDb } from "@/lib/firebase-admin"
+import { getSessionEmail } from "@/lib/session"
 import TaglineFlow from "@/components/tagline/TaglineFlow"
 
 export const dynamic = "force-dynamic"
@@ -6,6 +7,9 @@ export const dynamic = "force-dynamic"
 export default async function TaglinePage({ params }: { params: Promise<{ tmdb_id: string }> }) {
   const { tmdb_id } = await params
   const tmdbIdNum = Number(tmdb_id)
+  const email = await getSessionEmail()
+  const profileDoc = email ? await adminDb.collection("profiles").doc(email).get() : null
+  const username: string = profileDoc?.exists ? (profileDoc.data() as any).username ?? "" : ""
 
   const [boardDoc, movieRes, taglinesSnap] = await Promise.all([
     adminDb.collection("tagline_boards").doc(tmdb_id).get(),
@@ -46,6 +50,7 @@ export default async function TaglinePage({ params }: { params: Promise<{ tmdb_i
       movieTitle={movieTitle}
       initialBoard={board}
       existingMarks={existingMarks}
+      username={username}
     />
   )
 }

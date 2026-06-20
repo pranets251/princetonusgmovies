@@ -16,12 +16,12 @@ export async function POST(
   if (!snap.exists) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const data = snap.data() as any
-  const liked = (data.likes ?? []).includes(email)
+  const alreadyEndorsed = (data.endorsements ?? []).includes(email)
 
   await ref.update({
-    likes: liked ? FieldValue.arrayRemove(email) : FieldValue.arrayUnion(email),
-    like_count: liked ? FieldValue.increment(-1) : FieldValue.increment(1),
+    endorsements: alreadyEndorsed ? FieldValue.arrayRemove(email) : FieldValue.arrayUnion(email),
+    endorse_count: alreadyEndorsed ? FieldValue.increment(-1) : FieldValue.increment(1),
   })
 
-  return NextResponse.json({ liked: !liked, like_count: (data.like_count ?? 0) + (liked ? -1 : 1) })
+  return NextResponse.json({ endorsed: !alreadyEndorsed, endorse_count: (data.endorse_count ?? 0) + (alreadyEndorsed ? -1 : 1) })
 }

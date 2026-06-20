@@ -16,15 +16,15 @@ export async function GET(
 
   const profileEmail = profileSnap.docs[0].id
 
-  const likesSnap = await adminDb
-    .collection("movie_likes")
+  const endorsementsSnap = await adminDb
+    .collection("movie_endorsements")
     .where("user_email", "==", profileEmail)
     .get()
 
-  if (likesSnap.empty) return NextResponse.json({ movies: [] })
+  if (endorsementsSnap.empty) return NextResponse.json({ movies: [] })
 
-  const tmdbIds = likesSnap.docs
-    .filter(d => (d.data() as any).liked !== false)
+  const tmdbIds = endorsementsSnap.docs
+    .filter(d => (d.data() as any).endorsed !== false)
     .sort((a, b) => ((b.data() as any).created_at > (a.data() as any).created_at ? 1 : -1))
     .map(d => (d.data() as any).tmdb_id as number)
 

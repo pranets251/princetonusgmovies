@@ -74,18 +74,18 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
       {/* Subtle darkening for legibility */}
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.22)", transition: "opacity 0.4s ease" }} />
 
-      {/* Username gradient on hover */}
+      {/* Hover label */}
       {!muralView && (
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
-          background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 65%)",
-          padding: "28px 10px 9px",
+          background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, transparent 70%)",
+          padding: "64px 10px 9px",
           opacity: hovered ? 1 : 0,
           transition: "opacity 0.2s ease",
           pointerEvents: "none",
         }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em" }}>
-            @{tagline.username}
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, display: "block", textAlign: "left" }}>
+            See Movie Poster ⮑
           </span>
         </div>
       )}

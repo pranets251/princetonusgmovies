@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import TaglineCard from "@/components/TaglineCard"
 import BoardThumbnail from "@/components/BoardThumbnail"
+import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
 
 function useFonts(taglines: Tagline[]) {
@@ -46,6 +47,7 @@ export default function ProfilePage() {
   const [likedLoading, setLikedLoading] = useState(false)
   const [likedLoaded, setLikedLoaded] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [boardModalTmdbId, setBoardModalTmdbId] = useState<number | null>(null)
 
   const likedTaglines = useMemo(() => likedMovies.flatMap(m => m.taglines), [likedMovies])
   useFonts(tab === "taglines" ? taglines : likedTaglines)
@@ -66,7 +68,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (tab !== "liked" || likedLoaded) return
     setLikedLoading(true)
-    fetch(`/api/profile/${username}/liked-movies`)
+    fetch(`/api/profile/${username}/endorsed-movies`)
       .then(r => r.json())
       .then(data => setLikedMovies(data.movies ?? []))
       .finally(() => { setLikedLoading(false); setLikedLoaded(true) })
@@ -85,6 +87,7 @@ export default function ProfilePage() {
   )
 
   return (
+    <>
     <div className="flex flex-col h-full">
       {/* Profile header */}
       <div className="px-6 py-6 border-b shrink-0" style={{ borderColor: "var(--border)" }}>
@@ -145,7 +148,7 @@ export default function ProfilePage() {
             <div className="p-5" style={{ columns: 2, columnGap: 12 }}>
               {taglines.map(t => (
                 <div key={t.id} style={{ breakInside: "avoid", marginBottom: 12 }}>
-                  <TaglineCard tagline={t} onClick={() => router.push(`/movie/${t.tmdb_id}`)} />
+                  <TaglineCard tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
                 </div>
               ))}
             </div>
@@ -169,7 +172,7 @@ export default function ProfilePage() {
                   posterPath={m.poster_path}
                   taglines={m.taglines}
                   tmdbId={m.tmdb_id}
-                  onClick={() => router.push(`/movie/${m.tmdb_id}`)}
+                  onClick={() => setBoardModalTmdbId(m.tmdb_id)}
                 />
               ))}
             </div>
@@ -177,5 +180,13 @@ export default function ProfilePage() {
         )}
       </div>
     </div>
+
+    {boardModalTmdbId !== null && (
+      <TaglineBoardModal
+        tmdbId={boardModalTmdbId}
+        onClose={() => setBoardModalTmdbId(null)}
+      />
+    )}
+    </>
   )
 }

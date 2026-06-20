@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     creationBoxW: creationBoxW ?? null,
     align: "center", vertAlign: "center",
     created_at: now,
-    likes: [], like_count: 0,
+    endorsements: [], endorse_count: 0,
   })
 
   return NextResponse.json({ id: taglineRef.id })

@@ -23,8 +23,8 @@ export interface Tagline {
   align?: "left" | "center" | "right"
   vertAlign?: "top" | "center" | "bottom"
   created_at: string
-  likes: string[]
-  like_count: number
+  endorsements: string[]
+  endorse_count: number
 }
 
 export interface MuralBoard {
