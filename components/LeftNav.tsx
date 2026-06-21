@@ -59,7 +59,7 @@ export default function LeftNav({ username }: LeftNavProps) {
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold mt-2 bg-white hover:bg-zinc-100 text-black transition-colors"
         >
           <Pencil size={18} />
-          Add a Tagline a Movie!
+          Tagline a Movie!
         </button>
 
         {/* Screening callout */}
