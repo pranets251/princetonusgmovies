@@ -23,6 +23,12 @@ export async function GET(
   const profileEmail = profileDoc.id
   const profile = profileDoc.data() as any
 
+  const [followersSnap, followingSnap, viewerFollowDoc] = await Promise.all([
+    adminDb.collection("follows").where("following_email", "==", profileEmail).get(),
+    adminDb.collection("follows").where("follower_email", "==", profileEmail).get(),
+    adminDb.collection("follows").doc(`${email}_${profileEmail}`).get(),
+  ])
+
   // Fetch this user's posts
   const postsSnap = await adminDb
     .collection("posts")
@@ -72,6 +78,9 @@ export async function GET(
       email: profileEmail,
       is_self: profileEmail === email,
       post_count: posts.length,
+      followers: followersSnap.size,
+      following: followingSnap.size,
+      is_following: viewerFollowDoc.exists,
     },
     posts: enriched,
   })

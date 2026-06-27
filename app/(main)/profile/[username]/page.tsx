@@ -27,6 +27,7 @@ interface Profile {
   is_self: boolean
   followers: number
   following: number
+  is_following: boolean
 }
 
 interface LikedMovie {
@@ -48,6 +49,7 @@ export default function ProfilePage() {
   const [likedLoaded, setLikedLoaded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [boardModalTmdbId, setBoardModalTmdbId] = useState<number | null>(null)
+  const [followLoading, setFollowLoading] = useState(false)
 
   const likedTaglines = useMemo(() => likedMovies.flatMap(m => m.taglines), [likedMovies])
   useFonts(tab === "taglines" ? taglines : likedTaglines)
@@ -64,6 +66,20 @@ export default function ProfilePage() {
     }
     load()
   }, [username])
+
+  async function handleFollow() {
+    if (followLoading) return
+    setFollowLoading(true)
+    try {
+      const res = await fetch(`/api/users/${username}/follow`, { method: "POST" })
+      if (res.ok) {
+        const { following } = await res.json()
+        setProfile(p => p ? { ...p, is_following: following, followers: p.followers + (following ? 1 : -1) } : p)
+      }
+    } finally {
+      setFollowLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (tab !== "liked" || likedLoaded) return
@@ -102,7 +118,9 @@ export default function ProfilePage() {
               <span className="font-bold text-white text-base">{profile.username}</span>
               {profile.is_self
                 ? <button onClick={() => router.push("/settings")} className="text-xs border border-zinc-600 rounded-full px-3 py-0.5 text-zinc-400 hover:border-white hover:text-white transition-colors">Edit</button>
-                : <button className="text-xs border border-zinc-600 rounded-full px-3 py-0.5 text-zinc-400 hover:border-white hover:text-white transition-colors">Follow</button>}
+                : profile.is_following
+                  ? <button onClick={handleFollow} disabled={followLoading} className="text-xs border border-zinc-600 rounded-full px-3 py-0.5 text-zinc-400 hover:border-red-500 hover:text-red-500 transition-colors disabled:opacity-50">Following</button>
+                  : <button onClick={handleFollow} disabled={followLoading} className="text-xs border border-white rounded-full px-3 py-0.5 bg-white text-black hover:bg-zinc-200 transition-colors disabled:opacity-50">Follow</button>}
             </div>
             {profile.bio && <p className="text-sm text-zinc-400 mt-0.5">{profile.bio}</p>}
           </div>
