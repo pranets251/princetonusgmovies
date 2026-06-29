@@ -13,7 +13,7 @@ interface TaglineCardProps {
 }
 
 export default function TaglineCard({ tagline, onClick, muralView = false, muralTaglines }: TaglineCardProps) {
-  const { poster_path, x, y, text, font, color, align = "center", vertAlign = "center" } = tagline
+  const { poster_path, x, y, text, font, color, align = "center", vertAlign = "center", username } = tagline
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerH, setContainerH] = useState(0)
   const [hovered, setHovered] = useState(false)
@@ -78,13 +78,20 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
       {!muralView && (
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
-          background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, transparent 70%)",
+          background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
           padding: "64px 10px 9px",
           opacity: hovered ? 1 : 0,
           transition: "opacity 0.2s ease",
           pointerEvents: "none",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 8,
         }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, display: "block", textAlign: "left" }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4 }}>
+            @{username}
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
             See Movie Poster ⮑
           </span>
         </div>

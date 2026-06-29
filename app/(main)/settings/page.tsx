@@ -129,7 +129,7 @@ export default function SettingsPage() {
               <img src={avatar} alt="Profile photo" className="w-full h-full object-cover" />
             ) : (
               <span className="text-white text-3xl font-bold">
-                {username.slice(0, 1).toUpperCase()}
+                {username.slice(0, 2).toUpperCase()}
               </span>
             )}
             {/* Permanent camera badge */}

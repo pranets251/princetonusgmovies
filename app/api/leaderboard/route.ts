@@ -23,7 +23,11 @@ export async function GET(req: Request) {
   // Count movie_endorsements per tmdb_id within the time window
   let query: FirebaseFirestore.Query = adminDb.collection("movie_endorsements")
   if (startDate) query = query.where("created_at", ">=", startDate.toISOString())
-  const endorsementsSnap = await query.get()
+
+  const [endorsementsSnap, taglinesAllSnap] = await Promise.all([
+    query.get(),
+    adminDb.collection("taglines").get(),
+  ])
 
   const counts: Record<number, number> = {}
   endorsementsSnap.docs.forEach(d => {
@@ -33,9 +37,22 @@ export async function GET(req: Request) {
     if (id) counts[id] = (counts[id] ?? 0) + 1
   })
 
+  // Grouped once and reused below for both the tiebreaker and each movie's displayed taglines
+  const taglinesByMovie: Record<number, any[]> = {}
+  taglinesAllSnap.docs.forEach(d => {
+    const data = d.data() as any
+    const tid = data.tmdb_id as number
+    if (!tid) return
+    const arr = (taglinesByMovie[tid] ??= [])
+    if (arr.length < 100) arr.push({ id: d.id, ...data })
+  })
+
   const ranked = Object.entries(counts)
     .map(([id, count]) => ({ tmdb_id: parseInt(id), count }))
-    .sort((a, b) => b.count - a.count)
+    .sort((a, b) =>
+      b.count - a.count ||
+      (taglinesByMovie[b.tmdb_id]?.length ?? 0) - (taglinesByMovie[a.tmdb_id]?.length ?? 0)
+    )
     .slice(0, limitN)
 
   if (ranked.length === 0) return NextResponse.json({ movies: [] })
@@ -44,22 +61,23 @@ export async function GET(req: Request) {
 
   const movies = (await Promise.all(
     ranked.map(async ({ tmdb_id, count }) => {
-      const [boardDoc, taglinesSnap, tmdbRes] = await Promise.all([
+      const [boardDoc, tmdbRes] = await Promise.all([
         adminDb.collection("tagline_boards").doc(String(tmdb_id)).get(),
-        adminDb.collection("taglines").where("tmdb_id", "==", tmdb_id).limit(100).get(),
         fetch(`https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${apiKey}&language=en-US`),
       ])
 
-      if (!boardDoc.exists) return null
-      const board = boardDoc.data() as any
-      const taglines = taglinesSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      const board = boardDoc.exists ? (boardDoc.data() as any) : null
+      const taglines = taglinesByMovie[tmdb_id] ?? []
       const tmdbData = tmdbRes.ok ? await tmdbRes.json() : null
+
+      const title = board?.movie_title ?? tmdbData?.title
+      if (!title) return null
 
       return {
         tmdb_id,
-        title: board.movie_title,
+        title,
         year: tmdbData?.release_date?.slice(0, 4) ?? "",
-        poster_path: board.poster_path,
+        poster_path: board?.poster_path ?? tmdbData?.poster_path ?? null,
         endorse_count: count,
         taglines,
       }

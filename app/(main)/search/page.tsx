@@ -37,6 +37,7 @@ function SearchResults() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const q = searchParams.get("q") ?? ""
+  const filter = (searchParams.get("filter") as "all" | "movies" | "users" | null) ?? "all"
 
   const [tmdbMovies, setTmdbMovies] = useState<TmdbMovie[]>([])
   const [users, setUsers] = useState<UserResult[]>([])
@@ -52,17 +53,22 @@ function SearchResults() {
     setTmdbMovies([]); setBoardTaglines({}); setUsers([])
 
     async function load() {
-      // Fetch TMDB results + user results in parallel
+      const wantMovies = filter !== "users"
+      const wantUsers = filter !== "movies"
+
+      // Fetch TMDB results + user results in parallel (skip whichever the filter excludes)
       const [tmdbRes, searchRes] = await Promise.all([
-        fetch(`/api/tmdb?q=${encodeURIComponent(q)}`),
-        fetch(`/api/search?q=${encodeURIComponent(q)}`),
+        wantMovies ? fetch(`/api/tmdb?q=${encodeURIComponent(q)}`) : Promise.resolve(null),
+        wantUsers ? fetch(`/api/search?q=${encodeURIComponent(q)}`) : Promise.resolve(null),
       ])
-      const tmdbData = tmdbRes.ok ? await tmdbRes.json() : { results: [] }
-      const searchData = searchRes.ok ? await searchRes.json() : { users: [] }
+      const tmdbData = tmdbRes?.ok ? await tmdbRes.json() : { results: [] }
+      const searchData = searchRes?.ok ? await searchRes.json() : { users: [] }
 
       const tmdbList: TmdbMovie[] = (tmdbData.results ?? []).slice(0, 8)
       setTmdbMovies(tmdbList)
       setUsers(searchData.users ?? [])
+
+      if (!wantMovies) { setBoardTaglines({}); return }
 
       // Check which TMDB results have boards (fetch taglines for all)
       const boards: Record<number, Tagline[]> = {}
@@ -80,7 +86,7 @@ function SearchResults() {
     }
 
     load().finally(() => { setLoading(false); setDoneQ(q) })
-  }, [q])
+  }, [q, filter])
 
   if (!q) return (
     <div className="flex items-center justify-center py-20">
@@ -136,9 +142,10 @@ function SearchResults() {
                   style={{ backgroundColor: "var(--card)" }}
                 >
                   <div className="w-9 h-9 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-bold text-white overflow-hidden flex-shrink-0">
-                    {u.photo_url ? <img src={u.photo_url} alt={u.username} className="w-full h-full object-cover" /> : u.username[0]?.toUpperCase()}
+                    {u.photo_url ? <img src={u.photo_url} alt={u.username} className="w-full h-full object-cover" /> : u.username.slice(0, 2).toUpperCase()}
                   </div>
                   <span className="text-white text-sm font-semibold">{u.username}</span>
+                  <span className="text-zinc-500 text-xs ml-auto flex-shrink-0">View Profile</span>
                 </button>
               ))}
             </div>

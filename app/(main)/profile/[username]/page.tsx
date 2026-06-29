@@ -111,7 +111,7 @@ export default function ProfilePage() {
           <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center text-lg font-bold text-white overflow-hidden flex-shrink-0">
             {profile.photo_url
               ? <img src={profile.photo_url} alt={profile.username} className="w-full h-full object-cover" />
-              : profile.username[0]?.toUpperCase()}
+              : profile.username.slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3">

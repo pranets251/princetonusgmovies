@@ -1,8 +1,8 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { Search, Heart, HeartCrack } from "lucide-react"
-import { useState, useEffect } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Search, ThumbsUp, ThumbsDown } from "lucide-react"
+import { Suspense, useState, useEffect } from "react"
 
 const UPCOMING = [
   { date: "Sep 4", title: "After Hours" },
@@ -20,10 +20,66 @@ interface RatingState {
   my_vote: boolean | null
 }
 
+const GOLD = "#F5B800"
+const GOLD_SHADOW = "#7c5800"
+
+function voteButtonStyle(direction: "up" | "down", lit: boolean, pressing: boolean): React.CSSProperties {
+  const litBg = direction === "up" ? GOLD : "#fff"
+  const litColor = direction === "up" ? "#fff" : "#000"
+  const litShadow = direction === "up" ? GOLD_SHADOW : "#a1a1aa"
+  return {
+    background: lit ? litBg : "#3f3f46",
+    color: lit ? litColor : "#fff",
+    boxShadow: pressing
+      ? `0 1px 0 ${lit ? litShadow : "#27272a"}, 0 2px 4px rgba(0,0,0,0.35)`
+      : `0 4px 0 ${lit ? litShadow : "#27272a"}, 0 6px 14px rgba(0,0,0,0.35)`,
+    transform: pressing ? "translateY(3px)" : "translateY(0)",
+    transition: "transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease",
+  }
+}
+
+type ResultFilter = "all" | "movies" | "users"
+const RESULT_FILTERS: { key: ResultFilter; label: string }[] = [
+  { key: "all", label: "All results" },
+  { key: "movies", label: "Movies only" },
+  { key: "users", label: "Users only" },
+]
+
+function SearchFilterBox() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const q = searchParams.get("q") ?? ""
+  const filter = (searchParams.get("filter") as ResultFilter | null) ?? "all"
+
+  function applyFilter(f: ResultFilter) {
+    const params = new URLSearchParams()
+    if (q) params.set("q", q)
+    if (f !== "all") params.set("filter", f)
+    router.push(`/search?${params.toString()}`)
+  }
+
+  return (
+    <div className="rounded-xl border border-zinc-800 p-1.5 flex gap-1" style={{ backgroundColor: "var(--card)" }}>
+      {RESULT_FILTERS.map(({ key, label }) => (
+        <button
+          key={key}
+          onClick={() => applyFilter(key)}
+          className={`flex-1 text-xs font-medium py-1.5 rounded-lg transition-colors ${
+            filter === key ? "bg-white text-black" : "text-zinc-400 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function RightSidebar() {
   const router = useRouter()
+  const pathname = usePathname()
   const [query, setQuery] = useState("")
-  const [hoveredRating, setHoveredRating] = useState<string | null>(null)
+  const [pressingKey, setPressingKey] = useState<string | null>(null)
   const [ratings, setRatings] = useState<Record<string, RatingState>>(
     Object.fromEntries(LAST_WEEKEND.map(m => [m.key, { liked: 0, disliked: 0, my_vote: null }]))
   )
@@ -80,6 +136,12 @@ export default function RightSidebar() {
         />
       </form>
 
+      {pathname === "/search" && (
+        <Suspense fallback={null}>
+          <SearchFilterBox />
+        </Suspense>
+      )}
+
       {/* Next Weekend */}
       <div className="rounded-xl border border-zinc-800 p-4" style={{ backgroundColor: "var(--card)" }}>
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">
@@ -113,53 +175,60 @@ export default function RightSidebar() {
                 <p className="text-sm text-white mb-2">{m.title}</p>
 
                 {!voted ? (
-                  /* Pre-vote: two buttons */
+                  /* Pre-vote: two 3D buttons */
                   <div className="flex gap-2">
                     <button
                       onClick={() => submitRating(m.key, true)}
-                      onMouseEnter={() => setHoveredRating(`${m.key}-like`)}
-                      onMouseLeave={() => setHoveredRating(null)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs transition-colors"
-                      style={{
-                        border: `1px solid ${hoveredRating === `${m.key}-like` ? "#ef4444" : "#3f3f46"}`,
-                        color: hoveredRating === `${m.key}-like` ? "#ef4444" : "#a1a1aa",
-                      }}
+                      onMouseDown={() => setPressingKey(`${m.key}-up`)}
+                      onMouseUp={() => setPressingKey(null)}
+                      onMouseLeave={() => setPressingKey(null)}
+                      className="flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-semibold"
+                      style={voteButtonStyle("up", false, pressingKey === `${m.key}-up`)}
                     >
-                      <Heart size={16} />
+                      <ThumbsUp size={16} />
                     </button>
                     <button
                       onClick={() => submitRating(m.key, false)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-zinc-700 text-zinc-400 hover:border-zinc-400 hover:text-zinc-300 transition-colors text-xs"
+                      onMouseDown={() => setPressingKey(`${m.key}-down`)}
+                      onMouseUp={() => setPressingKey(null)}
+                      onMouseLeave={() => setPressingKey(null)}
+                      className="flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-semibold"
+                      style={voteButtonStyle("down", false, pressingKey === `${m.key}-down`)}
                     >
-                      <HeartCrack size={16} />
+                      <ThumbsDown size={16} />
                     </button>
                   </div>
                 ) : (
-                  /* Post-vote: percentage bar */
+                  /* Post-vote: 3D buttons stay lit on the chosen option */
                   <div>
-                    <div className="relative h-2 rounded-full overflow-hidden bg-zinc-700 mb-1.5">
+                    <div className="relative h-2 rounded-full overflow-hidden mb-2" style={{ backgroundColor: "#52525b" }}>
                       <div
                         className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${likedPct}%`, backgroundColor: "#ef4444" }}
+                        style={{ width: `${likedPct}%`, backgroundColor: r.my_vote === true ? GOLD : "#52525b" }}
                       />
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => submitRating(m.key, true)}
-                        onMouseEnter={() => setHoveredRating(`${m.key}-like-bar`)}
-                        onMouseLeave={() => setHoveredRating(null)}
-                        style={{ color: r.my_vote === true || hoveredRating === `${m.key}-like-bar` ? "#ef4444" : "#71717a" }}
-                        className="flex items-center gap-1 text-xs transition-colors"
+                        onMouseDown={() => setPressingKey(`${m.key}-up`)}
+                        onMouseUp={() => setPressingKey(null)}
+                        onMouseLeave={() => setPressingKey(null)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
+                        style={voteButtonStyle("up", r.my_vote === true, pressingKey === `${m.key}-up`)}
                       >
-                        <Heart size={14} style={{ fill: r.my_vote === true ? "#ef4444" : "none" }} />
+                        <ThumbsUp size={14} />
                         {likedPct}%
                       </button>
                       <button
                         onClick={() => submitRating(m.key, false)}
-                        className={`flex items-center gap-1 text-xs transition-colors ${r.my_vote === false ? "text-zinc-300" : "text-zinc-500 hover:text-zinc-300"}`}
+                        onMouseDown={() => setPressingKey(`${m.key}-down`)}
+                        onMouseUp={() => setPressingKey(null)}
+                        onMouseLeave={() => setPressingKey(null)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
+                        style={voteButtonStyle("down", r.my_vote === false, pressingKey === `${m.key}-down`)}
                       >
                         {dislikedPct}%
-                        <HeartCrack size={14} />
+                        <ThumbsDown size={14} />
                       </button>
                     </div>
                   </div>
