@@ -237,6 +237,7 @@ export default function TaglineCreateStep({
   const draggingRef = useRef(false)
   const lastPtr = useRef({ x: 0, y: 0 })
   const hasAutofocused = useRef(false)
+  const wasEmptyRef = useRef(true)
   const s = useRef({ bw: 0, bh: 0, boxPos: { x: (1 - BOX_W_FRAC) / 2, y: (1 - BOX_H_FRAC) / 2 } })
 
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
@@ -244,7 +245,7 @@ export default function TaglineCreateStep({
   const [text, setText] = useState("")
   const [html, setHtml] = useState("")
   const [textColor, setTextColor] = useState("#FFFFFF")
-  const [highlightColor, setHighlightColor] = useState<string | null>(null)
+  const [highlightColor, setHighlightColor] = useState<string | null>("#000000")
   const [manualFontSize, setManualFontSize] = useState(14)
   const [extractedColors, setExtractedColors] = useState<string[]>([])
   const [posting, setPosting] = useState(false)
@@ -556,6 +557,26 @@ export default function TaglineCreateStep({
                     suppressContentEditableWarning
                     onInput={e => {
                       const ce = e.currentTarget
+                      const isEmpty = !ce.textContent
+
+                      // Priming the very first character(s) with the active highlight:
+                      // execCommand can't carry a "current format" into completely empty
+                      // content, but it reliably extends an existing highlighted span once
+                      // one exists — so apply it once right as content first appears, then
+                      // let normal typing extend it from there.
+                      if (wasEmptyRef.current && !isEmpty && highlightColor) {
+                        const sel = window.getSelection()
+                        const fullRange = document.createRange()
+                        fullRange.selectNodeContents(ce)
+                        sel?.removeAllRanges(); sel?.addRange(fullRange)
+                        document.execCommand("hiliteColor", false, highlightColor)
+                        const endRange = document.createRange()
+                        endRange.selectNodeContents(ce)
+                        endRange.collapse(false)
+                        sel?.removeAllRanges(); sel?.addRange(endRange)
+                      }
+                      wasEmptyRef.current = isEmpty
+
                       setText(getTextWithLineBreaks(ce).slice(0, 200))
                       setHtml(normalizeHtml(ce.innerHTML))
                     }}

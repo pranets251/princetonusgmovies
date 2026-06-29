@@ -74,29 +74,6 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
       {/* Subtle darkening for legibility */}
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.22)", transition: "opacity 0.4s ease" }} />
 
-      {/* Hover label */}
-      {!muralView && (
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
-          padding: "64px 10px 9px",
-          opacity: hovered ? 1 : 0,
-          transition: "opacity 0.2s ease",
-          pointerEvents: "none",
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          gap: 8,
-        }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4 }}>
-            @{username}
-          </span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
-            See Movie Poster ⮑
-          </span>
-        </div>
-      )}
-
       {/* Other mural taglines (visible in muralView) */}
       {muralView && muralTaglines?.map(t => (
         <div
@@ -179,6 +156,29 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
           </div>
         )}
       </div>
+
+      {/* Hover label — rendered after the tagline text so the gradient covers it on hover */}
+      {!muralView && (
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
+          padding: "64px 10px 9px",
+          opacity: hovered ? 1 : 0,
+          transition: "opacity 0.2s ease",
+          pointerEvents: "none",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 8,
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4 }}>
+            @{username}
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
+            See Movie Poster ⮑
+          </span>
+        </div>
+      )}
     </div>
   )
 }
