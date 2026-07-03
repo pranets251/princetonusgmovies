@@ -7,7 +7,8 @@ export async function GET(req: Request) {
   if (!q) return NextResponse.json({ results: [] })
 
   const res = await fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(q)}&include_adult=false&language=en-US&page=1`
+    `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(q)}&include_adult=false&language=en-US&page=1`,
+    { next: { revalidate: 3600 } }
   )
 
   if (!res.ok) return NextResponse.json({ results: [] })

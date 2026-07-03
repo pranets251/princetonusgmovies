@@ -15,9 +15,12 @@ export async function POST(req: Request) {
     liked,
   })
 
-  const allSnap = await adminDb.collection("weekend_ratings").where("movie_key", "==", movie_key).get()
-  let likedCount = 0, dislikedCount = 0
-  allSnap.docs.forEach(d => { if ((d.data() as any).liked) likedCount++; else dislikedCount++ })
+  const [likedSnap, dislikedSnap] = await Promise.all([
+    adminDb.collection("weekend_ratings").where("movie_key", "==", movie_key).where("liked", "==", true).count().get(),
+    adminDb.collection("weekend_ratings").where("movie_key", "==", movie_key).where("liked", "==", false).count().get(),
+  ])
+  const likedCount = likedSnap.data().count
+  const dislikedCount = dislikedSnap.data().count
 
   return NextResponse.json({ liked: likedCount, disliked: dislikedCount, my_vote: liked })
 }

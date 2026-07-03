@@ -7,6 +7,7 @@ import BoardThumbnail from "@/components/BoardThumbnail"
 import DashedMovieCard from "@/components/DashedMovieCard"
 import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
+import { useFonts } from "@/lib/useFonts"
 
 interface TmdbMovie {
   id: number
@@ -18,19 +19,6 @@ interface TmdbMovie {
 interface UserResult {
   username: string
   photo_url: string | null
-}
-
-function useFonts(taglines: Tagline[]) {
-  useEffect(() => {
-    const fonts = [...new Set(taglines.map(t => t.font).filter(Boolean))]
-    if (!fonts.length) return
-    const families = fonts.map(f => `family=${encodeURIComponent(f)}`).join("&")
-    const link = document.createElement("link")
-    link.rel = "stylesheet"
-    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`
-    document.head.appendChild(link)
-    return () => { try { document.head.removeChild(link) } catch {} }
-  }, [taglines])
 }
 
 function SearchResults() {

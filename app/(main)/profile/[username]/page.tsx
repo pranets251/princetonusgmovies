@@ -6,19 +6,7 @@ import TaglineCard from "@/components/TaglineCard"
 import BoardThumbnail from "@/components/BoardThumbnail"
 import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
-
-function useFonts(taglines: Tagline[]) {
-  useEffect(() => {
-    const fonts = [...new Set(taglines.map(t => t.font).filter(Boolean))]
-    if (!fonts.length) return
-    const families = fonts.map(f => `family=${encodeURIComponent(f)}`).join("&")
-    const link = document.createElement("link")
-    link.rel = "stylesheet"
-    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`
-    document.head.appendChild(link)
-    return () => { try { document.head.removeChild(link) } catch {} }
-  }, [taglines])
-}
+import { useFonts } from "@/lib/useFonts"
 
 interface Profile {
   username: string
@@ -119,8 +107,14 @@ export default function ProfilePage() {
               {profile.is_self
                 ? <button onClick={() => router.push("/settings")} className="text-xs border border-zinc-600 rounded-full px-3 py-0.5 text-zinc-400 hover:border-white hover:text-white transition-colors">Edit</button>
                 : profile.is_following
-                  ? <button onClick={handleFollow} disabled={followLoading} className="text-xs border border-zinc-600 rounded-full px-3 py-0.5 text-zinc-400 hover:border-red-500 hover:text-red-500 transition-colors disabled:opacity-50">Following</button>
-                  : <button onClick={handleFollow} disabled={followLoading} className="text-xs border border-white rounded-full px-3 py-0.5 bg-white text-black hover:bg-zinc-200 transition-colors disabled:opacity-50">Follow</button>}
+                  ? <button onClick={handleFollow} disabled={followLoading} className={`text-xs border border-zinc-600 rounded-full px-3 py-0.5 text-zinc-400 transition-colors relative ${followLoading ? "pointer-events-none" : "hover:border-red-500 hover:text-red-500"}`}>
+                      <span style={{ opacity: followLoading ? 0 : 1 }}>Following</span>
+                      {followLoading && <span className="absolute inset-0 flex items-center justify-center"><span className="w-3 h-3 border border-zinc-400 border-t-transparent rounded-full animate-spin block" /></span>}
+                    </button>
+                  : <button onClick={handleFollow} disabled={followLoading} className={`text-xs border border-white rounded-full px-3 py-0.5 bg-white text-black transition-colors relative ${followLoading ? "pointer-events-none" : "hover:bg-zinc-200"}`}>
+                      <span style={{ opacity: followLoading ? 0 : 1 }}>Follow</span>
+                      {followLoading && <span className="absolute inset-0 flex items-center justify-center"><span className="w-3 h-3 border border-black border-t-transparent rounded-full animate-spin block" /></span>}
+                    </button>}
             </div>
             {profile.bio && <p className="text-sm text-zinc-400 mt-0.5">{profile.bio}</p>}
           </div>

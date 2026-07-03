@@ -12,13 +12,14 @@ export async function GET() {
 
   await Promise.all(
     MOVIE_KEYS.map(async (key) => {
-      const [allSnap, mySnap] = await Promise.all([
-        adminDb.collection("weekend_ratings").where("movie_key", "==", key).get(),
+      const [likedSnap, dislikedSnap, mySnap] = await Promise.all([
+        adminDb.collection("weekend_ratings").where("movie_key", "==", key).where("liked", "==", true).count().get(),
+        adminDb.collection("weekend_ratings").where("movie_key", "==", key).where("liked", "==", false).count().get(),
         adminDb.collection("weekend_ratings").doc(`${key}_${email}`).get(),
       ])
 
-      let liked = 0, disliked = 0
-      allSnap.docs.forEach(d => { if ((d.data() as any).liked) liked++; else disliked++ })
+      const liked = likedSnap.data().count
+      const disliked = dislikedSnap.data().count
 
       ratings[key] = {
         liked,

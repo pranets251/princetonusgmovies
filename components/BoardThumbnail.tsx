@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useState, useMemo } from "react"
+import Image from "next/image"
 import { Tagline, BOX_FRAC, TMDB_ORIGINAL } from "@/lib/taglineTypes"
 import { useHighlightedMovies } from "@/lib/useHighlightedMovies"
 
@@ -76,13 +77,16 @@ export default function BoardThumbnail({ posterPath, taglines, movieTitle, onCli
         transition: "outline-color 0.18s ease",
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`${TMDB_ORIGINAL}${posterPath}`}
-        alt={title}
-        draggable={false}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" }}
-      />
+      {posterPath && (
+        <Image
+          src={`${TMDB_ORIGINAL}${posterPath}`}
+          alt={title}
+          fill
+          draggable={false}
+          sizes="(max-width: 768px) 50vw, 25vw"
+          style={{ objectFit: "cover", pointerEvents: "none" }}
+        />
+      )}
 
       {/* Per-line redacted text */}
       {bw > 0 && displayTaglines.map(t => {

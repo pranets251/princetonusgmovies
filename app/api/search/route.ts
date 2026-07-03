@@ -11,7 +11,7 @@ export async function GET(req: Request) {
   const q = (searchParams.get("q") ?? "").trim().toLowerCase()
   if (!q) return NextResponse.json({ movies: [], users: [] })
 
-  const boardsSnap = await adminDb.collection("tagline_boards").get()
+  const boardsSnap = await adminDb.collection("tagline_boards").limit(200).get()
 
   const movies: any[] = []
   for (const doc of boardsSnap.docs) {

@@ -13,7 +13,7 @@ export default async function TaglinePage({ params }: { params: Promise<{ tmdb_i
 
   const [boardDoc, movieRes, taglinesSnap] = await Promise.all([
     adminDb.collection("tagline_boards").doc(tmdb_id).get(),
-    fetch(`https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${process.env.TMDB_API_KEY}&language=en-US`),
+    fetch(`https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${process.env.TMDB_API_KEY}&language=en-US`, { next: { revalidate: 86400 } }),
     adminDb.collection("taglines").where("tmdb_id", "==", tmdbIdNum).get(),
   ])
 

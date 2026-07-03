@@ -2,21 +2,10 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
 import { Ticket, Pencil, Share2, User, X } from "lucide-react"
 import { Tagline, BOX_FRAC, TMDB_ORIGINAL } from "@/lib/taglineTypes"
-
-function useFonts(taglines: Tagline[]) {
-  useEffect(() => {
-    const fonts = [...new Set(taglines.map(t => t.font).filter(Boolean))]
-    if (!fonts.length) return
-    const families = fonts.map(f => `family=${encodeURIComponent(f)}`).join("&")
-    const link = document.createElement("link")
-    link.rel = "stylesheet"
-    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`
-    document.head.appendChild(link)
-    return () => { try { document.head.removeChild(link) } catch {} }
-  }, [taglines])
-}
+import { useFonts } from "@/lib/useFonts"
 
 export default function MovieBoardPage() {
   const { tmdb_id } = useParams() as { tmdb_id: string }
@@ -25,6 +14,7 @@ export default function MovieBoardPage() {
   const [taglines, setTaglines] = useState<Tagline[]>([])
   const [endorsed, setEndorsed] = useState(false)
   const [endorseCount, setEndorseCount] = useState(0)
+  const [endorseLoading, setEndorseLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
@@ -59,19 +49,15 @@ export default function MovieBoardPage() {
   }, [])
 
   useEffect(() => {
-    async function load() {
-      const [tagsRes, likeRes] = await Promise.all([
-        fetch(`/api/taglines?tmdb_id=${tmdb_id}`),
-        fetch(`/api/movies/${tmdb_id}/endorse`),
-      ])
-      if (tagsRes.ok) setTaglines((await tagsRes.json()).taglines ?? [])
-      if (likeRes.ok) {
-        const { endorsed: l, endorse_count: lc } = await likeRes.json()
-        setEndorsed(l); setEndorseCount(lc ?? 0)
-      }
-      setLoading(false)
-    }
-    load()
+    fetch(`/api/taglines?tmdb_id=${tmdb_id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setTaglines(data.taglines ?? []) })
+      .finally(() => setLoading(false))
+
+    fetch(`/api/movies/${tmdb_id}/endorse`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) { setEndorsed(data.endorsed); setEndorseCount(data.endorse_count ?? 0) } })
+      .finally(() => setEndorseLoading(false))
   }, [tmdb_id])
 
   async function handleEndorse() {
@@ -190,12 +176,13 @@ export default function MovieBoardPage() {
             </div>
           ) : bw > 0 ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={`${TMDB_ORIGINAL}${posterPath}`}
                 alt=""
+                fill
                 draggable={false}
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block", userSelect: "none", pointerEvents: "none" }}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                style={{ objectFit: "cover", userSelect: "none", pointerEvents: "none" }}
               />
 
               {boardTaglines.map(t => {
@@ -237,16 +224,18 @@ export default function MovieBoardPage() {
       <div className="flex items-center justify-center flex-shrink-0" style={{ height: 76, gap: 12 }}>
         {/* Endorse */}
         <button
-          onMouseDown={() => setPressing("endorse")}
+          onMouseDown={() => !endorseLoading && setPressing("endorse")}
           onMouseUp={() => setPressing(null)}
           onMouseLeave={() => setPressing(null)}
-          onClick={handleEndorse}
+          onClick={!endorseLoading ? handleEndorse : undefined}
+          disabled={endorseLoading}
           style={{
             display: "flex", alignItems: "center", gap: 8,
-            padding: "10px 22px", borderRadius: 10, border: "none", cursor: "pointer",
+            padding: "10px 22px", borderRadius: 10, border: "none",
+            cursor: endorseLoading ? "default" : "pointer",
             fontWeight: 700, fontSize: 14, letterSpacing: "0.01em",
-            background: endorsed ? "#dc2626" : "#3f3f46",
-            color: endorsed ? "#fff" : "#ef4444",
+            background: endorsed && !endorseLoading ? "#dc2626" : "#3f3f46",
+            color: endorseLoading ? "#71717a" : endorsed ? "#fff" : "#ef4444",
             boxShadow: pressing === "endorse"
               ? `0 1px 0 ${endorsed ? "#991b1b" : "#27272a"}, 0 2px 4px rgba(0,0,0,0.35)`
               : `0 4px 0 ${endorsed ? "#991b1b" : "#27272a"}, 0 6px 14px rgba(0,0,0,0.35)`,
@@ -254,8 +243,8 @@ export default function MovieBoardPage() {
             transition: "transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease",
           }}
         >
-          <Ticket size={18} color={endorsed ? "#fff" : "#ef4444"} />
-          {endorsed ? "Endorsed!" : "Endorse"}
+          <Ticket size={18} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#ef4444"} />
+          {endorseLoading ? "…" : endorsed ? "Endorsed!" : "Endorse"}
         </button>
 
         {/* Add tagline */}

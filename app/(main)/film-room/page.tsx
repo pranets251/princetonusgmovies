@@ -6,6 +6,7 @@ import BoardThumbnail from "@/components/BoardThumbnail"
 import DashedMovieCard from "@/components/DashedMovieCard"
 import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
+import { useFonts } from "@/lib/useFonts"
 
 type Period = "week" | "month" | "year" | "all"
 const PERIOD_LABELS: Record<Period, string> = {
@@ -30,19 +31,6 @@ interface TmdbResult {
   title: string
   release_date: string
   poster_path: string | null
-}
-
-function useFonts(taglines: Tagline[]) {
-  useEffect(() => {
-    const fonts = [...new Set(taglines.map(t => t.font).filter(Boolean))]
-    if (!fonts.length) return
-    const families = fonts.map(f => `family=${encodeURIComponent(f)}`).join("&")
-    const link = document.createElement("link")
-    link.rel = "stylesheet"
-    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`
-    document.head.appendChild(link)
-    return () => { try { document.head.removeChild(link) } catch {} }
-  }, [taglines])
 }
 
 const normalize = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()

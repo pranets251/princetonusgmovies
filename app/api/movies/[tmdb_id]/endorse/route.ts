@@ -10,13 +10,17 @@ export async function GET(
   if (!email) return NextResponse.json({ endorsed: false, endorse_count: 0 })
 
   const { tmdb_id } = await params
-  const [endorseDoc, allSnap] = await Promise.all([
+  const [endorseDoc, countSnap] = await Promise.all([
     adminDb.collection("movie_endorsements").doc(`${tmdb_id}_${email}`).get(),
-    adminDb.collection("movie_endorsements").where("tmdb_id", "==", Number(tmdb_id)).get(),
+    adminDb.collection("movie_endorsements")
+      .where("tmdb_id", "==", Number(tmdb_id))
+      .where("endorsed", "==", true)
+      .count()
+      .get(),
   ])
 
   const isEndorsed = endorseDoc.exists ? (endorseDoc.data() as any).endorsed !== false : false
-  const endorseCount = allSnap.docs.filter(d => (d.data() as any).endorsed !== false).length
+  const endorseCount = countSnap.data().count
 
   return NextResponse.json({ endorsed: isEndorsed, endorse_count: endorseCount })
 }
@@ -37,7 +41,11 @@ export async function POST(
 
   await endorseRef.set({ tmdb_id: Number(tmdb_id), user_email: email, endorsed: newEndorsed, created_at: new Date().toISOString() })
 
-  const allSnap = await adminDb.collection("movie_endorsements").where("tmdb_id", "==", Number(tmdb_id)).get()
-  const endorseCount = allSnap.docs.filter(d => (d.data() as any).endorsed !== false).length
+  const countSnap = await adminDb.collection("movie_endorsements")
+    .where("tmdb_id", "==", Number(tmdb_id))
+    .where("endorsed", "==", true)
+    .count()
+    .get()
+  const endorseCount = countSnap.data().count
   return NextResponse.json({ endorsed: newEndorsed, endorse_count: endorseCount })
 }

@@ -23,52 +23,11 @@ export async function GET(
   const profileEmail = profileDoc.id
   const profile = profileDoc.data() as any
 
-  const [followersSnap, followingSnap, viewerFollowDoc] = await Promise.all([
-    adminDb.collection("follows").where("following_email", "==", profileEmail).get(),
-    adminDb.collection("follows").where("follower_email", "==", profileEmail).get(),
+  const [followersCount, followingCount, viewerFollowDoc] = await Promise.all([
+    adminDb.collection("follows").where("following_email", "==", profileEmail).count().get(),
+    adminDb.collection("follows").where("follower_email", "==", profileEmail).count().get(),
     adminDb.collection("follows").doc(`${email}_${profileEmail}`).get(),
   ])
-
-  // Fetch this user's posts
-  const postsSnap = await adminDb
-    .collection("posts")
-    .where("user_email", "==", profileEmail)
-    .get()
-
-  const posts = postsSnap.docs
-    .map(d => ({ id: d.id, ...d.data() }))
-    .sort((a: any, b: any) => (b.created_at > a.created_at ? 1 : -1))
-
-  // Enrich with likes
-  const enriched = await Promise.all(
-    posts.map(async (post: any) => {
-      const [likesSnap, myLike] = await Promise.all([
-        adminDb.collection("likes").where("post_id", "==", post.id).get(),
-        adminDb.collection("likes").doc(`${post.id}_${email}`).get(),
-      ])
-
-      // Resolve original creator
-      let original_creator_username = null
-      let original_creator_photo = null
-      if (post.original_creator_email) {
-        const oc = await adminDb.collection("profiles").doc(post.original_creator_email).get()
-        if (oc.exists) {
-          original_creator_username = (oc.data() as any).username ?? null
-          original_creator_photo = (oc.data() as any).photo_url ?? null
-        }
-      }
-
-      return {
-        ...post,
-        username: profile.username,
-        photo_url: profile.photo_url ?? null,
-        like_count: likesSnap.size,
-        liked_by_me: myLike.exists,
-        original_creator_username,
-        original_creator_photo,
-      }
-    })
-  )
 
   return NextResponse.json({
     profile: {
@@ -77,11 +36,11 @@ export async function GET(
       photo_url: profile.photo_url ?? null,
       email: profileEmail,
       is_self: profileEmail === email,
-      post_count: posts.length,
-      followers: followersSnap.size,
-      following: followingSnap.size,
+      post_count: 0,
+      followers: followersCount.data().count,
+      following: followingCount.data().count,
       is_following: viewerFollowDoc.exists,
     },
-    posts: enriched,
+    posts: [],
   })
 }

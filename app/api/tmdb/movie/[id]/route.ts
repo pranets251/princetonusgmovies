@@ -8,8 +8,8 @@ export async function GET(
   const apiKey = process.env.TMDB_API_KEY
 
   const [movieRes, creditsRes] = await Promise.all([
-    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=en-US`),
-    fetch(`https://api.themoviedb.org/3/movie/${id}/credits?api_key=${apiKey}&language=en-US`),
+    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=en-US`, { next: { revalidate: 86400 } }),
+    fetch(`https://api.themoviedb.org/3/movie/${id}/credits?api_key=${apiKey}&language=en-US`, { next: { revalidate: 86400 } }),
   ])
 
   if (!movieRes.ok) return NextResponse.json({ error: "Not found" }, { status: 404 })

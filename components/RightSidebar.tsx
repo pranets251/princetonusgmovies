@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Search, ThumbsUp, ThumbsDown } from "lucide-react"
-import { Suspense, useState, useEffect } from "react"
+import { Suspense, useState, useEffect, useRef } from "react"
 
 const UPCOMING = [
   { date: "Sep 4", title: "After Hours" },
@@ -80,6 +80,7 @@ export default function RightSidebar() {
   const pathname = usePathname()
   const [query, setQuery] = useState("")
   const [pressingKey, setPressingKey] = useState<string | null>(null)
+  const voteVersionRef = useRef<Record<string, number>>({})
   const [ratings, setRatings] = useState<Record<string, RatingState>>(
     Object.fromEntries(LAST_WEEKEND.map(m => [m.key, { liked: 0, disliked: 0, my_vote: null }]))
   )
@@ -98,15 +99,14 @@ export default function RightSidebar() {
 
   async function submitRating(movieKey: string, liked: boolean) {
     const prev = ratings[movieKey]
-    // Optimistic update
+    const version = (voteVersionRef.current[movieKey] ?? 0) + 1
+    voteVersionRef.current[movieKey] = version
+
     setRatings(r => {
       const cur = r[movieKey]
       const newLiked = (cur.my_vote === true ? cur.liked - 1 : cur.liked) + (liked ? 1 : 0)
       const newDisliked = (cur.my_vote === false ? cur.disliked - 1 : cur.disliked) + (!liked ? 1 : 0)
-      return {
-        ...r,
-        [movieKey]: { liked: newLiked, disliked: newDisliked, my_vote: liked },
-      }
+      return { ...r, [movieKey]: { liked: newLiked, disliked: newDisliked, my_vote: liked } }
     })
 
     const res = await fetch("/api/weekend-rating", {
@@ -114,6 +114,8 @@ export default function RightSidebar() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ movie_key: movieKey, liked }),
     })
+
+    if (voteVersionRef.current[movieKey] !== version) return
     if (res.ok) {
       const data = await res.json()
       setRatings(r => ({ ...r, [movieKey]: { liked: data.liked, disliked: data.disliked, my_vote: data.my_vote } }))

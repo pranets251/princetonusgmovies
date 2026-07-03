@@ -2,21 +2,10 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { X, Ticket, Pencil, User } from "lucide-react"
 import { Tagline, BOX_FRAC, TMDB_ORIGINAL } from "@/lib/taglineTypes"
-
-function useFonts(taglines: Tagline[]) {
-  useEffect(() => {
-    const fonts = [...new Set(taglines.map(t => t.font).filter(Boolean))]
-    if (!fonts.length) return
-    const families = fonts.map(f => `family=${encodeURIComponent(f)}`).join("&")
-    const link = document.createElement("link")
-    link.rel = "stylesheet"
-    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`
-    document.head.appendChild(link)
-    return () => { try { document.head.removeChild(link) } catch {} }
-  }, [taglines])
-}
+import { useFonts } from "@/lib/useFonts"
 
 interface Props {
   tmdbId: number
@@ -29,6 +18,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
   const [endorsed, setEndorsed] = useState(false)
   const [endorseCount, setEndorseCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [endorseLoading, setEndorseLoading] = useState(true)
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
   const [pressing, setPressing] = useState<"endorse" | "add" | "contributors" | null>(null)
   const [showContributors, setShowContributors] = useState(false)
@@ -37,19 +27,15 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
   useFonts(taglines)
 
   useEffect(() => {
-    async function load() {
-      const [tagsRes, likeRes] = await Promise.all([
-        fetch(`/api/taglines?tmdb_id=${tmdbId}`),
-        fetch(`/api/movies/${tmdbId}/endorse`),
-      ])
-      if (tagsRes.ok) setTaglines((await tagsRes.json()).taglines ?? [])
-      if (likeRes.ok) {
-        const { endorsed: l, endorse_count: lc } = await likeRes.json()
-        setEndorsed(l); setEndorseCount(lc ?? 0)
-      }
-      setLoading(false)
-    }
-    load()
+    fetch(`/api/taglines?tmdb_id=${tmdbId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setTaglines(data.taglines ?? []) })
+      .finally(() => setLoading(false))
+
+    fetch(`/api/movies/${tmdbId}/endorse`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) { setEndorsed(data.endorsed); setEndorseCount(data.endorse_count ?? 0) } })
+      .finally(() => setEndorseLoading(false))
   }, [tmdbId])
 
   useEffect(() => {
@@ -150,12 +136,13 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
           </div>
         ) : (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={`${TMDB_ORIGINAL}${posterPath}`}
               alt={movieTitle}
+              fill
               draggable={false}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", userSelect: "none", pointerEvents: "none" }}
+              sizes="(max-width: 768px) 100vw, 453px"
+              style={{ objectFit: "cover", userSelect: "none", pointerEvents: "none" }}
             />
             {bw > 0 && boardTaglines.map(t => {
               const tBwf = t.bwf ?? (BOX_FRAC / (t.zoom ?? 1))
@@ -195,26 +182,28 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
       <div style={{ display: "flex", gap: 12, marginTop: 18, alignItems: "stretch", width: bw || undefined }}>
         {/* Endorse */}
         <button
-          onMouseDown={() => setPressing("endorse")}
+          onMouseDown={() => !endorseLoading && setPressing("endorse")}
           onMouseUp={() => setPressing(null)}
           onMouseLeave={() => setPressing(null)}
-          onClick={handleEndorse}
+          onClick={!endorseLoading ? handleEndorse : undefined}
+          disabled={endorseLoading}
           style={{
             flex: 1,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            padding: "10px 22px", borderRadius: 10, border: "none", cursor: "pointer",
+            padding: "10px 22px", borderRadius: 10, border: "none",
+            cursor: endorseLoading ? "default" : "pointer",
             fontWeight: 700, fontSize: 14, letterSpacing: "0.01em", whiteSpace: "nowrap",
-            background: endorsed ? "#dc2626" : "#fff",
-            color: endorsed ? "#fff" : "#dc2626",
+            background: endorseLoading ? "#3f3f46" : endorsed ? "#dc2626" : "#fff",
+            color: endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626",
             boxShadow: pressing === "endorse"
               ? `0 1px 0 ${endorsed ? "#991b1b" : "#d4d4d8"}, 0 2px 4px rgba(0,0,0,0.35)`
-              : `0 4px 0 ${endorsed ? "#991b1b" : "#d4d4d8"}, 0 6px 14px rgba(0,0,0,0.35)`,
+              : `0 4px 0 ${endorseLoading ? "#27272a" : endorsed ? "#991b1b" : "#d4d4d8"}, 0 6px 14px rgba(0,0,0,0.35)`,
             transform: pressing === "endorse" ? "translateY(3px)" : "translateY(0)",
             transition: "transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease",
           }}
         >
-          <Ticket size={18} color={endorsed ? "#fff" : "#dc2626"} />
-          {endorsed ? "Endorsed!" : "Endorse"}
+          <Ticket size={18} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} />
+          {endorseLoading ? "…" : endorsed ? "Endorsed!" : "Endorse"}
         </button>
 
         {/* Add tagline */}

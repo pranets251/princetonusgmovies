@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { adminDb } from "@/lib/firebase-admin"
 
+export const revalidate = 60
+
 // Popcorn = likes + 2 × taglines
 export async function GET() {
   const snap = await adminDb.collection("taglines").get()

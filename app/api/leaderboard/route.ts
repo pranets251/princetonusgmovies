@@ -59,15 +59,21 @@ export async function GET(req: Request) {
 
   const apiKey = process.env.TMDB_API_KEY
 
+  const boardRefs = ranked.map(({ tmdb_id }) => adminDb.collection("tagline_boards").doc(String(tmdb_id)))
+  const boardDocs = boardRefs.length > 0 ? await adminDb.getAll(...boardRefs) : []
+  const boardByTmdbId: Record<number, any> = {}
+  boardDocs.forEach((doc, i) => {
+    if (doc.exists) boardByTmdbId[ranked[i].tmdb_id] = doc.data()
+  })
+
   const movies = (await Promise.all(
     ranked.map(async ({ tmdb_id, count }) => {
-      const [boardDoc, tmdbRes] = await Promise.all([
-        adminDb.collection("tagline_boards").doc(String(tmdb_id)).get(),
-        fetch(`https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${apiKey}&language=en-US`),
-      ])
-
-      const board = boardDoc.exists ? (boardDoc.data() as any) : null
+      const board = boardByTmdbId[tmdb_id] ?? null
       const taglines = taglinesByMovie[tmdb_id] ?? []
+      const tmdbRes = await fetch(
+        `https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${apiKey}&language=en-US`,
+        { next: { revalidate: 86400 } }
+      )
       const tmdbData = tmdbRes.ok ? await tmdbRes.json() : null
 
       const title = board?.movie_title ?? tmdbData?.title
