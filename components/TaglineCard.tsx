@@ -160,7 +160,7 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
       {/* Hover overlays — rendered after tagline text so gradients cover it */}
       {!muralView && (
         <>
-          {/* Top: tagline number + endorse count */}
+          {/* Top: username */}
           <div style={{
             position: "absolute", top: 0, left: 0, right: 0,
             background: "linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%)",
@@ -168,19 +168,12 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
             opacity: hovered ? 1 : 0,
             transition: "opacity 0.2s ease",
             pointerEvents: "none",
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 8,
           }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.02em" }}>
-              No. {tagline.tagline_number ?? "—"}
-            </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", display: "flex", alignItems: "center", gap: 3 }}>
-              {tagline.movie_endorse_count ?? 0} ♥
+              @{username}
             </span>
           </div>
-          {/* Bottom: username + see movie poster */}
+          {/* Bottom: endorsements | tagline number + see movie poster */}
           <div style={{
             position: "absolute", bottom: 0, left: 0, right: 0,
             background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
@@ -193,8 +186,8 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
             justifyContent: "space-between",
             gap: 8,
           }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4 }}>
-              @{username}
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, whiteSpace: "nowrap" }}>
+              {tagline.movie_endorse_count ?? 0} ♥ | No. {tagline.tagline_number ?? "—"}
             </span>
             <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
               See Movie Poster ⮑
