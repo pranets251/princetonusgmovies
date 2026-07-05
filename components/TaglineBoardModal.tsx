@@ -24,6 +24,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
   const [showContributors, setShowContributors] = useState(false)
   const boardRef = useRef<HTMLDivElement>(null)
   const contributorsRef = useRef<HTMLDivElement>(null)
+  const endorseVersionRef = useRef(0)
   useFonts(taglines)
 
   useEffect(() => {
@@ -64,13 +65,21 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
   }, [showContributors])
 
   async function handleEndorse() {
+    const prev = { endorsed, endorseCount }
+    const version = endorseVersionRef.current + 1
+    endorseVersionRef.current = version
+
     const newEndorsed = !endorsed
     setEndorsed(newEndorsed)
     setEndorseCount(c => c + (newEndorsed ? 1 : -1))
+
     const res = await fetch(`/api/movies/${tmdbId}/endorse`, { method: "POST" })
+    if (endorseVersionRef.current !== version) return
     if (res.ok) {
       const { endorsed: l, endorse_count: lc } = await res.json()
       setEndorsed(l); setEndorseCount(lc)
+    } else {
+      setEndorsed(prev.endorsed); setEndorseCount(prev.endorseCount)
     }
   }
 
