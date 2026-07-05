@@ -202,7 +202,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
             transition: "transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease",
           }}
         >
-          <Heart size={18} fill={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} />
+          <Heart size={18} fill={endorsed ? (endorseLoading ? "#71717a" : "#fff") : "none"} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} />
           {endorseLoading ? "…" : endorsed ? "Endorsed!" : "Endorse"}
         </button>
 

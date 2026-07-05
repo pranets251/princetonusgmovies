@@ -218,7 +218,7 @@ export default function RightSidebar() {
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
                         style={voteButtonStyle("up", r.my_vote === true, pressingKey === `${m.key}-up`)}
                       >
-                        <ThumbsUp size={14} />
+                        <ThumbsUp size={14} fill={r.my_vote === true ? "currentColor" : "none"} />
                         {likedPct}%
                       </button>
                       <button
@@ -230,7 +230,7 @@ export default function RightSidebar() {
                         style={voteButtonStyle("down", r.my_vote === false, pressingKey === `${m.key}-down`)}
                       >
                         {dislikedPct}%
-                        <ThumbsDown size={14} />
+                        <ThumbsDown size={14} fill={r.my_vote === false ? "currentColor" : "none"} />
                       </button>
                     </div>
                   </div>
