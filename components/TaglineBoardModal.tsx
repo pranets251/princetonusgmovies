@@ -202,7 +202,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
             transition: "transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease",
           }}
         >
-          <Heart size={18} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} />
+          <Heart size={18} fill={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} />
           {endorseLoading ? "…" : endorsed ? "Endorsed!" : "Endorse"}
         </button>
 
@@ -226,7 +226,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
             transition: "transform 0.08s ease, box-shadow 0.08s ease",
           }}
         >
-          <Pencil size={18} color="#fff" />
+          <Pencil size={18} color="#fff" strokeWidth={2.5} />
           Add your own
         </button>
 

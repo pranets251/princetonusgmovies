@@ -28,7 +28,27 @@ export async function GET(req: Request) {
   const taglines = snap.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .sort((a: any, b: any) => (b.created_at > a.created_at ? 1 : -1))
-  return NextResponse.json({ taglines })
+
+  const uniqueTmdbIds = [...new Set(taglines.map((t: any) => t.tmdb_id as number))]
+  const endorseCounts = await Promise.all(
+    uniqueTmdbIds.map(id =>
+      adminDb.collection("movie_endorsements")
+        .where("tmdb_id", "==", id)
+        .where("endorsed", "==", true)
+        .count()
+        .get()
+        .then(s => ({ id, count: s.data().count }))
+    )
+  )
+  const endorseByMovie: Record<number, number> = {}
+  endorseCounts.forEach(({ id, count }) => { endorseByMovie[id] = count })
+
+  const taglinesWithCounts = taglines.map((t: any) => ({
+    ...t,
+    movie_endorse_count: endorseByMovie[t.tmdb_id] ?? 0,
+  }))
+
+  return NextResponse.json({ taglines: taglinesWithCounts })
 }
 
 export async function POST(req: Request) {

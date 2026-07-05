@@ -26,6 +26,7 @@ export interface Tagline {
   endorsements: string[]
   endorse_count: number
   tagline_number?: number
+  movie_endorse_count?: number
 }
 
 export interface MuralBoard {

@@ -177,7 +177,7 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
               No. {tagline.tagline_number ?? "—"}
             </span>
             <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", display: "flex", alignItems: "center", gap: 3 }}>
-              {tagline.endorse_count} ♥
+              {tagline.movie_endorse_count ?? 0} ♥
             </span>
           </div>
           {/* Bottom: username + see movie poster */}
