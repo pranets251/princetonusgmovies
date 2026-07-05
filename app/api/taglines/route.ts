@@ -48,11 +48,16 @@ export async function POST(req: Request) {
   const now = new Date().toISOString()
 
   const boardRef  = adminDb.collection("tagline_boards").doc(String(tmdb_id))
-  const boardSnap = await boardRef.get()
+  const [boardSnap, countSnap] = await Promise.all([
+    boardRef.get(),
+    adminDb.collection("taglines").where("tmdb_id", "==", tmdb_id).count().get(),
+  ])
 
   if (!boardSnap.exists) {
     await boardRef.set({ tmdb_id, movie_title, poster_path, created_by: email, created_at: now })
   }
+
+  const tagline_number = countSnap.data().count + 1
 
   const taglineRef = await adminDb.collection("taglines").add({
     tmdb_id, movie_title, poster_path,
@@ -66,6 +71,7 @@ export async function POST(req: Request) {
     align: "center", vertAlign: "center",
     created_at: now,
     endorsements: [], endorse_count: 0,
+    tagline_number,
   })
 
   return NextResponse.json({ id: taglineRef.id })

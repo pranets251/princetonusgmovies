@@ -157,27 +157,50 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
         )}
       </div>
 
-      {/* Hover label — rendered after the tagline text so the gradient covers it on hover */}
+      {/* Hover overlays — rendered after tagline text so gradients cover it */}
       {!muralView && (
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
-          padding: "64px 10px 9px",
-          opacity: hovered ? 1 : 0,
-          transition: "opacity 0.2s ease",
-          pointerEvents: "none",
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          gap: 8,
-        }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4 }}>
-            @{username}
-          </span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
-            See Movie Poster ⮑
-          </span>
-        </div>
+        <>
+          {/* Top: tagline number + endorse count */}
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0,
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%)",
+            padding: "9px 10px 36px",
+            opacity: hovered ? 1 : 0,
+            transition: "opacity 0.2s ease",
+            pointerEvents: "none",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 8,
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.02em" }}>
+              No. {tagline.tagline_number ?? "—"}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", display: "flex", alignItems: "center", gap: 3 }}>
+              {tagline.endorse_count} ♥
+            </span>
+          </div>
+          {/* Bottom: username + see movie poster */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0,
+            background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
+            padding: "64px 10px 9px",
+            opacity: hovered ? 1 : 0,
+            transition: "opacity 0.2s ease",
+            pointerEvents: "none",
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            gap: 8,
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4 }}>
+              @{username}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
+              See Movie Poster ⮑
+            </span>
+          </div>
+        </>
       )}
     </div>
   )

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { X, Ticket, Pencil, User } from "lucide-react"
+import { X, Heart, Pencil, User } from "lucide-react"
 import { Tagline, BOX_FRAC, TMDB_ORIGINAL } from "@/lib/taglineTypes"
 import { useFonts } from "@/lib/useFonts"
 
@@ -202,7 +202,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
             transition: "transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease",
           }}
         >
-          <Ticket size={18} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} />
+          <Heart size={18} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} />
           {endorseLoading ? "…" : endorsed ? "Endorsed!" : "Endorse"}
         </button>
 
