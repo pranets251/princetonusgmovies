@@ -41,6 +41,7 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
   }, [containerH, tagline.fontSize, bhf])
 
   return (
+    <>
     <div
       ref={containerRef}
       onClick={onClick}
@@ -128,45 +129,36 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
         )}
       </div>
 
-      {/* Hover overlays — rendered after tagline text so gradients paint on top */}
+      {/* Hover overlay — bottom only */}
       {!muralView && (
-        <>
-          {/* Top: username */}
-          <div style={{
-            position: "absolute", top: 0, left: 0, right: 0,
-            background: "linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%)",
-            padding: "9px 10px 36px",
-            opacity: hovered ? 1 : 0,
-            transition: "opacity 0.2s ease",
-            pointerEvents: "none",
-          }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.02em" }}>
-              @{username}
-            </span>
-          </div>
-
-          {/* Bottom: numbers left, see poster right */}
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0,
-            background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
-            padding: "64px 10px 9px",
-            opacity: hovered ? 1 : 0,
-            transition: "opacity 0.2s ease",
-            pointerEvents: "none",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            gap: 8,
-          }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, whiteSpace: "nowrap" }}>
-              {tagline.movie_endorse_count ?? 0} ♥ · {tagline.tagline_number ?? "—"} <Pencil size={10} strokeWidth={2.5} />
-            </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
-              See Movie Poster ⮑
-            </span>
-          </div>
-        </>
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
+          padding: "64px 10px 9px",
+          opacity: hovered ? 1 : 0,
+          transition: "opacity 0.2s ease",
+          pointerEvents: "none",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 8,
+        }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, whiteSpace: "nowrap" }}>
+            {tagline.movie_endorse_count ?? 0} ♥ · {tagline.tagline_number ?? "—"} <Pencil size={10} strokeWidth={2.5} />
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
+            See Movie Poster ⮑
+          </span>
+        </div>
       )}
     </div>
+    {!muralView && (
+      <div style={{ textAlign: "right", paddingTop: 5 }}>
+        <span style={{ fontSize: 13, color: "#a1a1aa", fontFamily: "system-ui, sans-serif", fontWeight: 500 }}>
+          @{username}
+        </span>
+      </div>
+    )}
+    </>
   )
 }
