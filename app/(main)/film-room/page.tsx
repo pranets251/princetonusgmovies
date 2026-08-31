@@ -36,7 +36,7 @@ interface TmdbResult {
 const normalize = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
 
 export default function FilmRoomPage() {
-  const [period, setPeriod] = useState<Period>("week")
+  const [period, setPeriod] = useState<Period>("all")
   const [showPeriodMenu, setShowPeriodMenu] = useState(false)
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
@@ -132,9 +132,9 @@ export default function FilmRoomPage() {
                   tmdbId={movie.tmdb_id}
                   onClick={() => setBoardModalTmdbId(movie.tmdb_id)}
                 />
-                {/* Rank number permanently below each poster */}
+                {/* Rank number + endorsement count for the period, permanently below each poster */}
                 <p style={{ textAlign: "center", fontSize: 13, color: "#a1a1aa", margin: 0, lineHeight: 1 }}>
-                  {movie.rank}
+                  {movie.rank} &middot; {movie.endorse_count} ♥
                 </p>
               </div>
             ))}

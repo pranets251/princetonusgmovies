@@ -21,7 +21,7 @@ export default function LeftNav({ username }: LeftNavProps) {
 
   const links = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/film-room", label: "Film Room", icon: BarChart2 },
+    { href: "/film-room", label: "Rankings", icon: BarChart2 },
     { href: `/profile/${username}`, label: "Profile", icon: User },
   ]
 
@@ -62,10 +62,9 @@ export default function LeftNav({ username }: LeftNavProps) {
           Tagline a Movie!
         </button>
 
-        {/* Screening callout */}
         <div className="mt-3 px-3 py-3 rounded-lg border border-zinc-800 bg-white/[0.03]">
           <p className="text-xs text-zinc-400 leading-relaxed">
-            🎬 Add taglines to your favorite movies&apos; posters and endorse the movies other people have added taglines to on the website so that we can try to screen your favorite films every weekend!
+            All taglines here are by other Princeton students or staff. Click on a tagline to see its corresponding movie title and add a heart if you want to see this movie at Princeton too!
           </p>
         </div>
       </div>

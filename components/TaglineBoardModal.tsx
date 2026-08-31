@@ -212,7 +212,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
           }}
         >
           <Heart size={18} fill={endorsed ? (endorseLoading ? "#71717a" : "#fff") : "none"} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#dc2626"} />
-          {endorseLoading ? "…" : endorsed ? "Endorsed!" : "Endorse"}
+          {endorseLoading ? "…" : endorseCount}
         </button>
 
         {/* Add tagline */}
@@ -298,9 +298,6 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
               <div style={{ padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: 14 }}>
                 <span style={{ fontSize: 12, color: "#a1a1aa" }}>
                   <span style={{ fontWeight: 600, color: "#e4e4e7" }}>{taglines.length}</span> Taglines
-                </span>
-                <span style={{ fontSize: 12, color: "#a1a1aa" }}>
-                  <span style={{ fontWeight: 600, color: "#e4e4e7" }}>{endorseCount}</span> Endorsements
                 </span>
               </div>
             </div>
