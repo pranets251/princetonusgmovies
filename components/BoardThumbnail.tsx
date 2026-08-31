@@ -10,10 +10,11 @@ interface BoardThumbnailProps {
   taglines: Tagline[]
   movieTitle?: string
   tmdbId?: number
+  endorseCount?: number
   onClick?: () => void
 }
 
-export default function BoardThumbnail({ posterPath, taglines, movieTitle, onClick }: BoardThumbnailProps) {
+export default function BoardThumbnail({ posterPath, taglines, movieTitle, endorseCount, onClick }: BoardThumbnailProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 0, h: 0 })
   const [hovered, setHovered] = useState(false)
@@ -121,7 +122,20 @@ export default function BoardThumbnail({ posterPath, taglines, movieTitle, onCli
       {/* Hover overlay — shallow */}
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.16)", opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease", pointerEvents: "none", zIndex: 5 }} />
 
-
+      {/* Hover: endorsement count, bottom-left */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.75) 30%, transparent 80%)",
+        padding: "28px 10px 9px",
+        opacity: hovered ? 1 : 0,
+        transition: "opacity 0.2s ease",
+        pointerEvents: "none",
+        zIndex: 6,
+      }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, whiteSpace: "nowrap" }}>
+          {endorseCount ?? 0} ♥
+        </span>
+      </div>
     </div>
   )
 }

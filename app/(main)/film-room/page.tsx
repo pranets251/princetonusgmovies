@@ -130,11 +130,12 @@ export default function FilmRoomPage() {
                   taglines={movie.taglines}
                   movieTitle={movie.title}
                   tmdbId={movie.tmdb_id}
+                  endorseCount={movie.endorse_count}
                   onClick={() => setBoardModalTmdbId(movie.tmdb_id)}
                 />
-                {/* Rank number + endorsement count for the period, permanently below each poster */}
+                {/* Rank number permanently below each poster */}
                 <p style={{ textAlign: "center", fontSize: 13, color: "#a1a1aa", margin: 0, lineHeight: 1 }}>
-                  {movie.rank} &middot; {movie.endorse_count} ♥
+                  {movie.rank}
                 </p>
               </div>
             ))}

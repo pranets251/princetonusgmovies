@@ -106,6 +106,7 @@ function SearchResults() {
                     taglines={tags}
                     movieTitle={m.title}
                     tmdbId={m.id}
+                    endorseCount={tags[0]?.movie_endorse_count}
                     onClick={() => setBoardModalTmdbId(m.id)}
                   />
                 ) : (
