@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Princeton USG Movies",
+    "slug": "princeton-usg-movies",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "pum",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.princeton.usgmovies"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      [
+        "expo-av",
+        { "microphonePermission": false }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

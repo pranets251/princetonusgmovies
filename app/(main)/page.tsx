@@ -99,7 +99,7 @@ export default function HomePage() {
               >
                 <Pencil size={34} strokeWidth={2.5} style={{ color: ctaHovered ? "#F5B800" : "#52525b", transition: "color 0.2s ease", flexShrink: 0 }} />
                 <p style={{ fontSize: 15, fontWeight: 600, color: ctaHovered ? "#F5B800" : "#52525b", textAlign: "center", margin: 0, padding: "0 14px", letterSpacing: "0.06em", textTransform: "uppercase", transition: "color 0.2s ease" }}>
-                  add a tagline to a movie you&apos;ve fallen in love with!
+                  add a tagline to a movie you want us to show!
                 </p>
               </button>
               {taglines.filter((_, i) => i % 2 === 1).map(t => (
