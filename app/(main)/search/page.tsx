@@ -6,6 +6,7 @@ import { Suspense } from "react"
 import BoardThumbnail from "@/components/BoardThumbnail"
 import DashedMovieCard from "@/components/DashedMovieCard"
 import TaglineBoardModal from "@/components/TaglineBoardModal"
+import SearchBox from "@/components/SearchBox"
 import { Tagline } from "@/lib/taglineTypes"
 import { useFonts } from "@/lib/useFonts"
 
@@ -77,14 +78,23 @@ function SearchResults() {
   }, [q, filter])
 
   if (!q) return (
-    <div className="flex items-center justify-center py-20">
-      <p className="text-zinc-500 text-sm">Search for a movie above.</p>
+    <div>
+      <div className="lg:hidden p-4 border-b" style={{ borderColor: "var(--border)" }}>
+        <SearchBox />
+      </div>
+      <div className="flex items-center justify-center py-20">
+        <p className="text-zinc-500 text-sm">Search for a movie above.</p>
+      </div>
     </div>
   )
 
   return (
     <>
     <div>
+      <div className="lg:hidden p-4 border-b" style={{ borderColor: "var(--border)" }}>
+        <SearchBox />
+      </div>
+
       <div className="px-6 py-5 border-b" style={{ borderColor: "var(--border)" }}>
         <h1 className="text-base font-semibold text-white">Results for &ldquo;{q}&rdquo;</h1>
       </div>
@@ -96,7 +106,7 @@ function SearchResults() {
       ) : (
         <div className="p-5 flex flex-col gap-8">
           {tmdbMovies.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+            <div className="grid grid-cols-2 sm:grid-cols-3" style={{ gap: 14 }}>
               {tmdbMovies.map(m => {
                 const tags = boardTaglines[m.id]
                 return tags?.length > 0 ? (

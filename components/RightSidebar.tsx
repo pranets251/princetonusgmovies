@@ -1,8 +1,8 @@
 "use client"
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Search, ThumbsUp, ThumbsDown } from "lucide-react"
-import { Suspense, useState, useEffect, useRef } from "react"
+import { ThumbsUp, ThumbsDown } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import SearchBox from "@/components/SearchBox"
 
 const UPCOMING = [
   { date: "Sep 4", title: "After Hours" },
@@ -38,47 +38,7 @@ function voteButtonStyle(direction: "up" | "down", lit: boolean, pressing: boole
   }
 }
 
-type ResultFilter = "all" | "movies" | "users"
-const RESULT_FILTERS: { key: ResultFilter; label: string }[] = [
-  { key: "all", label: "All results" },
-  { key: "movies", label: "Movies only" },
-  { key: "users", label: "Users only" },
-]
-
-function SearchFilterBox() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const q = searchParams.get("q") ?? ""
-  const filter = (searchParams.get("filter") as ResultFilter | null) ?? "all"
-
-  function applyFilter(f: ResultFilter) {
-    const params = new URLSearchParams()
-    if (q) params.set("q", q)
-    if (f !== "all") params.set("filter", f)
-    router.push(`/search?${params.toString()}`)
-  }
-
-  return (
-    <div className="rounded-xl border border-zinc-800 p-1.5 flex gap-1" style={{ backgroundColor: "var(--card)" }}>
-      {RESULT_FILTERS.map(({ key, label }) => (
-        <button
-          key={key}
-          onClick={() => applyFilter(key)}
-          className={`flex-1 text-xs font-medium py-1.5 rounded-lg transition-colors ${
-            filter === key ? "bg-white text-black" : "text-zinc-400 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 export default function RightSidebar() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const [query, setQuery] = useState("")
   const [pressingKey, setPressingKey] = useState<string | null>(null)
   const voteVersionRef = useRef<Record<string, number>>({})
   const [ratings, setRatings] = useState<Record<string, RatingState>>(
@@ -91,11 +51,6 @@ export default function RightSidebar() {
       .then(data => { if (data?.ratings) setRatings(data.ratings) })
       .catch(() => {})
   }, [])
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`)
-  }
 
   async function submitRating(movieKey: string, liked: boolean) {
     const prev = ratings[movieKey]
@@ -126,23 +81,7 @@ export default function RightSidebar() {
 
   return (
     <aside className="w-80 flex-shrink-0 flex flex-col gap-4 pt-[14px] pb-6 px-4 sticky top-0 h-screen overflow-y-auto">
-      {/* Search */}
-      <form onSubmit={handleSearch} className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-        <input
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search movies and users"
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-full pl-8 pr-4 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
-        />
-      </form>
-
-      {pathname === "/search" && (
-        <Suspense fallback={null}>
-          <SearchFilterBox />
-        </Suspense>
-      )}
+      <SearchBox />
 
       {/* Next Weekend */}
       <div className="rounded-xl border border-zinc-800 p-4" style={{ backgroundColor: "var(--card)" }}>

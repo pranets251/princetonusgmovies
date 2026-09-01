@@ -80,38 +80,29 @@ export default function HomePage() {
             </p>
           </div>
         ) : (
-          <div style={{ padding: 20, display: "flex", gap: 12 }}>
-            {/* Left column: CTA (square) then taglines[1,3,5…] */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-              <button
-                onClick={() => window.dispatchEvent(new Event("open-create-modal"))}
-                onMouseEnter={() => setCtaHovered(true)}
-                onMouseLeave={() => setCtaHovered(false)}
-                style={{
-                  width: "100%", aspectRatio: "1",
-                  background: "var(--bg)", border: "none",
-                  borderRadius: 12, display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center", gap: 8,
-                  cursor: "pointer",
-                  ...ctaBorder(ctaHovered ? "#F5B800" : "#3f3f46"),
-                  transition: "background-image 0.2s ease",
-                }}
-              >
-                <Pencil size={34} strokeWidth={2.5} style={{ color: ctaHovered ? "#F5B800" : "#52525b", transition: "color 0.2s ease", flexShrink: 0 }} />
-                <p style={{ fontSize: 15, fontWeight: 600, color: ctaHovered ? "#F5B800" : "#52525b", textAlign: "center", margin: 0, padding: "0 14px", letterSpacing: "0.06em", textTransform: "uppercase", transition: "color 0.2s ease" }}>
-                  add a tagline to a movie you want us to show!
-                </p>
-              </button>
-              {taglines.filter((_, i) => i % 2 === 1).map(t => (
-                <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
-              ))}
-            </div>
-            {/* Right column: taglines[0,2,4…] — most recent at top */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-              {taglines.filter((_, i) => i % 2 === 0).map(t => (
-                <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
-              ))}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2" style={{ padding: 20, gap: 12 }}>
+            <button
+              onClick={() => window.dispatchEvent(new Event("open-create-modal"))}
+              onMouseEnter={() => setCtaHovered(true)}
+              onMouseLeave={() => setCtaHovered(false)}
+              style={{
+                width: "100%", aspectRatio: "1",
+                background: "var(--bg)", border: "none",
+                borderRadius: 12, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center", gap: 8,
+                cursor: "pointer",
+                ...ctaBorder(ctaHovered ? "#F5B800" : "#3f3f46"),
+                transition: "background-image 0.2s ease",
+              }}
+            >
+              <Pencil size={34} strokeWidth={2.5} style={{ color: ctaHovered ? "#F5B800" : "#52525b", transition: "color 0.2s ease", flexShrink: 0 }} />
+              <p style={{ fontSize: 15, fontWeight: 600, color: ctaHovered ? "#F5B800" : "#52525b", textAlign: "center", margin: 0, padding: "0 14px", letterSpacing: "0.06em", textTransform: "uppercase", transition: "color 0.2s ease" }}>
+                add a tagline to a movie you want us to show!
+              </p>
+            </button>
+            {taglines.map(t => (
+              <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
+            ))}
           </div>
         )}
       </div>

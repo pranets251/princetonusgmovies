@@ -3,6 +3,7 @@ import { getSessionEmail } from "@/lib/session"
 import { adminDb } from "@/lib/firebase-admin"
 import LeftNav from "@/components/LeftNav"
 import RightSidebar from "@/components/RightSidebar"
+import BottomNav from "@/components/BottomNav"
 import GlobalCreateModal from "@/components/GlobalCreateModal"
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
@@ -16,14 +17,19 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="flex min-h-screen max-w-6xl mx-auto w-full">
-      <LeftNav username={username} />
+      <div className="hidden md:flex">
+        <LeftNav username={username} />
+      </div>
 
-      <main className="flex-1 min-w-0 border-l border-r" style={{ borderColor: "var(--border)" }}>
+      <main className="flex-1 min-w-0 pb-16 md:pb-0 md:border-l md:border-r" style={{ borderColor: "var(--border)" }}>
         {children}
       </main>
 
-      <RightSidebar />
+      <div className="hidden lg:flex">
+        <RightSidebar />
+      </div>
       <GlobalCreateModal />
+      <BottomNav username={username} />
     </div>
   )
 }

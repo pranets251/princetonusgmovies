@@ -61,12 +61,6 @@ export default function LeftNav({ username }: LeftNavProps) {
           <Pencil size={18} />
           Tagline a Movie!
         </button>
-
-        <div className="mt-3 px-3 py-3 rounded-lg border border-zinc-800 bg-white/[0.03]">
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            All taglines here are by other Princeton students or staff. Click on a tagline to see its corresponding movie title and add a heart if you want to see this movie at Princeton too!
-          </p>
-        </div>
       </div>
 
       {/* Bottom: greeting + three-dot menu */}

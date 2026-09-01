@@ -122,7 +122,7 @@ export default function FilmRoomPage() {
             <p className="text-zinc-500 text-sm">{movies.length === 0 ? "No ranked movies yet. Start endorsing!" : "No movies match your search."}</p>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3" style={{ gap: 14 }}>
             {filteredMovies.map(movie => (
               <div key={movie.tmdb_id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <BoardThumbnail

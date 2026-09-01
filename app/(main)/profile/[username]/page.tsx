@@ -177,7 +177,7 @@ export default function ProfilePage() {
               <p className="text-zinc-500 text-sm">No liked movies yet.</p>
             </div>
           ) : (
-            <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+            <div className="grid grid-cols-2 sm:grid-cols-3" style={{ padding: 20, gap: 14 }}>
               {likedMovies.map(m => (
                 <BoardThumbnail
                   key={m.tmdb_id}
