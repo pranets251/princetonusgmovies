@@ -123,12 +123,10 @@ export default function BoardThumbnail({ posterPath, taglines, movieTitle, endor
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.16)", opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease", pointerEvents: "none", zIndex: 5 }} />
 
       {/* Hover: endorsement count, bottom-left */}
-      <div style={{
+      <div className={`hover-overlay${hovered ? " is-hovered" : ""}`} style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.75) 30%, transparent 80%)",
         padding: "28px 10px 9px",
-        opacity: hovered ? 1 : 0,
-        transition: "opacity 0.2s ease",
         pointerEvents: "none",
         zIndex: 6,
       }}>

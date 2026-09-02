@@ -74,3 +74,35 @@ video {
   width: 100%;
   background: #000;
 }
+
+/* Hover overlays on tagline/movie cards: revealed on :hover state (desktop),
+   but forced permanently visible below md since touch devices have no hover */
+.hover-overlay {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.hover-overlay.is-hovered {
+  opacity: 1;
+}
+@media (max-width: 767px) {
+  .hover-overlay {
+    opacity: 1 !important;
+  }
+}
+
+/* Contributors popup on the movie board modal: full-width sheet above the
+   button on mobile, side flyout on desktop */
+.contributors-popup {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  right: 0;
+}
+@media (min-width: 768px) {
+  .contributors-popup {
+    bottom: 0;
+    left: calc(100% + 10px);
+    right: auto;
+    width: 210px;
+  }
+}

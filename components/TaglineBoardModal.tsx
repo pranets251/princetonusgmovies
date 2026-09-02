@@ -188,7 +188,8 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
       </div>
 
       {/* Action bar — width matches the poster's width */}
-      <div style={{ display: "flex", gap: 12, marginTop: 18, alignItems: "stretch", width: bw || undefined }}>
+      <div className="flex flex-col md:flex-row" style={{ gap: 12, marginTop: 20, alignItems: "stretch", width: bw || undefined }}>
+      <div className="flex" style={{ gap: 12 }}>
         {/* Endorse */}
         <button
           onMouseDown={() => !endorseLoading && setPressing("endorse")}
@@ -199,7 +200,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
           style={{
             flex: 1,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            padding: "10px 22px", borderRadius: 10, border: "none",
+            padding: "12px 22px", borderRadius: 10, border: "none",
             cursor: endorseLoading ? "default" : "pointer",
             fontWeight: 700, fontSize: 14, letterSpacing: "0.01em", whiteSpace: "nowrap",
             background: endorseLoading ? "#3f3f46" : endorsed ? "#dc2626" : "#fff",
@@ -224,7 +225,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
           style={{
             flex: 1,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            padding: "10px 22px", borderRadius: 10, border: "none", cursor: "pointer",
+            padding: "12px 22px", borderRadius: 10, border: "none", cursor: "pointer",
             fontWeight: 700, fontSize: 14, letterSpacing: "0.01em", whiteSpace: "nowrap",
             background: "#F5B800",
             color: "#fff",
@@ -238,18 +239,19 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
           <Pencil size={18} color="#fff" strokeWidth={2.5} />
           Add your own
         </button>
+      </div>
 
         {/* Contributors toggle */}
-        <div ref={contributorsRef} style={{ position: "relative" }}>
+        <div ref={contributorsRef} style={{ position: "relative" }} className="md:flex-shrink-0">
           <button
             onMouseDown={() => setPressing("contributors")}
             onMouseUp={() => setPressing(null)}
             onMouseLeave={() => setPressing(null)}
             onClick={() => setShowContributors(v => !v)}
+            className="w-full md:w-auto md:h-full"
             style={{
-              height: "100%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              padding: "0 16px", borderRadius: 10, border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              padding: "12px 16px", borderRadius: 10, border: "none", cursor: "pointer",
               background: showContributors ? "#52525b" : "#3f3f46",
               boxShadow: pressing === "contributors"
                 ? `0 1px 0 ${showContributors ? "#3f3f46" : "#27272a"}, 0 2px 4px rgba(0,0,0,0.35)`
@@ -259,12 +261,13 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
             }}
           >
             <User size={18} color="#e4e4e7" />
+            <span className="md:hidden" style={{ fontSize: 14, fontWeight: 700, color: "#e4e4e7", letterSpacing: "0.01em" }}>
+              Contributors
+            </span>
           </button>
 
           {showContributors && (
-            <div style={{
-              position: "absolute", bottom: 0, left: "calc(100% + 10px)",
-              width: 210,
+            <div className="contributors-popup" style={{
               background: "#1c1c1e",
               border: "1px solid rgba(255,255,255,0.12)",
               borderRadius: 12,

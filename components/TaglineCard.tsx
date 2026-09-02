@@ -131,12 +131,10 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
       {!muralView && (
         <>
           {/* Top: username */}
-          <div style={{
+          <div className={`hover-overlay${hovered ? " is-hovered" : ""}`} style={{
             position: "absolute", top: 0, left: 0, right: 0,
             background: "linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%)",
             padding: "9px 10px 36px",
-            opacity: hovered ? 1 : 0,
-            transition: "opacity 0.2s ease",
             pointerEvents: "none",
           }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.02em" }}>
@@ -145,12 +143,10 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
           </div>
 
           {/* Bottom: endorsements left, see title right */}
-          <div style={{
+          <div className={`hover-overlay${hovered ? " is-hovered" : ""}`} style={{
             position: "absolute", bottom: 0, left: 0, right: 0,
             background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.9) 22%, transparent 75%)",
             padding: "64px 10px 9px",
-            opacity: hovered ? 1 : 0,
-            transition: "opacity 0.2s ease",
             pointerEvents: "none",
             display: "flex",
             alignItems: "flex-end",
