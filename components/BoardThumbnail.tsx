@@ -130,7 +130,7 @@ export default function BoardThumbnail({ posterPath, taglines, movieTitle, endor
         pointerEvents: "none",
         zIndex: 6,
       }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, whiteSpace: "nowrap" }}>
+        <span className="overlay-text" style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, whiteSpace: "nowrap" }}>
           {endorseCount ?? 0} ♥
         </span>
       </div>

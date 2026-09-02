@@ -90,6 +90,14 @@ video {
   }
 }
 
+/* Text inside those overlays: a touch smaller on mobile, since it's
+   permanently on screen there instead of only appearing on hover */
+@media (max-width: 767px) {
+  .overlay-text {
+    font-size: 11px !important;
+  }
+}
+
 /* Contributors popup on the movie board modal: full-width sheet above the
    button on mobile, side flyout on desktop */
 .contributors-popup {
