@@ -5,6 +5,7 @@ import LeftNav from "@/components/LeftNav"
 import RightSidebar from "@/components/RightSidebar"
 import BottomNav from "@/components/BottomNav"
 import GlobalCreateModal from "@/components/GlobalCreateModal"
+import { CurrentUserProvider } from "@/components/CurrentUserContext"
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const email = await getSessionEmail()
@@ -16,20 +17,22 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const username = (profileDoc.data() as any).username as string
 
   return (
-    <div className="flex min-h-screen max-w-6xl mx-auto w-full">
-      <div className="hidden md:flex">
-        <LeftNav username={username} />
-      </div>
+    <CurrentUserProvider username={username}>
+      <div className="flex min-h-screen max-w-6xl mx-auto w-full">
+        <div className="hidden md:flex">
+          <LeftNav username={username} />
+        </div>
 
-      <main className="flex-1 min-w-0 pb-16 md:pb-0 md:border-l md:border-r" style={{ borderColor: "var(--border)" }}>
-        {children}
-      </main>
+        <main className="flex-1 min-w-0 pb-16 md:pb-0 md:border-l md:border-r" style={{ borderColor: "var(--border)" }}>
+          {children}
+        </main>
 
-      <div className="hidden lg:flex">
-        <RightSidebar />
+        <div className="hidden lg:flex">
+          <RightSidebar />
+        </div>
+        <GlobalCreateModal />
+        <BottomNav username={username} />
       </div>
-      <GlobalCreateModal />
-      <BottomNav username={username} />
-    </div>
+    </CurrentUserProvider>
   )
 }

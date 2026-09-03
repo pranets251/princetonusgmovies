@@ -187,9 +187,9 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
         )}
       </div>
 
-      {/* Action bar — width matches the poster's width */}
-      <div className="flex flex-col md:flex-row" style={{ gap: 12, marginTop: 20, alignItems: "stretch", width: bw || undefined }}>
-      <div className="flex" style={{ gap: 12, flex: 1 }}>
+      {/* Action bar — centered, buttons sized to content rather than stretched */}
+      <div className="flex flex-col md:flex-row" style={{ gap: 12, marginTop: 20, alignItems: "stretch", justifyContent: "center", width: bw || undefined }}>
+      <div className="flex" style={{ gap: 12, justifyContent: "center" }}>
         {/* Endorse */}
         <button
           onMouseDown={() => !endorseLoading && setPressing("endorse")}
@@ -222,7 +222,6 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
           onMouseLeave={() => setPressing(null)}
           onClick={() => { onClose(); router.push(`/tagline/${tmdbId}`) }}
           style={{
-            flex: 1,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             padding: "12px 22px", borderRadius: 10, border: "none", cursor: "pointer",
             fontWeight: 700, fontSize: 14, letterSpacing: "0.01em", whiteSpace: "nowrap",

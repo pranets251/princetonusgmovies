@@ -68,7 +68,11 @@ export default function TrendingPage() {
                 <div style={{ columns: 2, columnGap: 12 }}>
                   {m.taglines.slice(0, 4).map(t => (
                     <div key={t.id} style={{ breakInside: "avoid", marginBottom: 12 }}>
-                      <TaglineCard tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
+                      <TaglineCard
+                        tagline={t}
+                        onClick={() => setBoardModalTmdbId(t.tmdb_id)}
+                        onDelete={id => setMovies(ms => ms.map(mv => mv.tmdb_id === m.tmdb_id ? { ...mv, taglines: mv.taglines.filter(x => x.id !== id) } : mv))}
+                      />
                     </div>
                   ))}
                 </div>

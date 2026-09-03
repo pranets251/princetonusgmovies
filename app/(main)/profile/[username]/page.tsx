@@ -160,7 +160,7 @@ export default function ProfilePage() {
             <div className="p-5" style={{ columns: 2, columnGap: 12 }}>
               {taglines.map(t => (
                 <div key={t.id} style={{ breakInside: "avoid", marginBottom: 12 }}>
-                  <TaglineCard tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
+                  <TaglineCard tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} onDelete={id => setTaglines(ts => ts.filter(x => x.id !== id))} />
                 </div>
               ))}
             </div>

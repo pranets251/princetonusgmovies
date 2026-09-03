@@ -102,12 +102,12 @@ export default function HomePage() {
                   </p>
                 </button>
                 {taglines.filter((_, i) => i % 2 === 1).map(t => (
-                  <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
+                  <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} onDelete={id => setTaglines(ts => ts.filter(x => x.id !== id))} />
                 ))}
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
                 {taglines.filter((_, i) => i % 2 === 0).map(t => (
-                  <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} />
+                  <TaglineCard key={t.id} tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} onDelete={id => setTaglines(ts => ts.filter(x => x.id !== id))} />
                 ))}
               </div>
             </div>

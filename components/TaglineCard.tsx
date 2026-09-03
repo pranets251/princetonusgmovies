@@ -1,20 +1,46 @@
 "use client"
 
 import { useRef, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { Pencil, Trash2 } from "lucide-react"
 import { Tagline, BOX_FRAC, TMDB_W780 } from "@/lib/taglineTypes"
+import { useCurrentUsername } from "@/components/CurrentUserContext"
 
 interface TaglineCardProps {
   tagline: Tagline
   onClick?: () => void
+  onDelete?: (id: string) => void
   muralView?: boolean
   muralTaglines?: Tagline[]
 }
 
-export default function TaglineCard({ tagline, onClick, muralView = false, muralTaglines }: TaglineCardProps) {
+export default function TaglineCard({ tagline, onClick, onDelete, muralView = false, muralTaglines }: TaglineCardProps) {
   const { poster_path, x, y, text, font, color, align = "center", username } = tagline
+  const router = useRouter()
+  const currentUsername = useCurrentUsername()
+  const isOwner = currentUsername !== null && currentUsername === username
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerH, setContainerH] = useState(0)
   const [hovered, setHovered] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  function handleEdit(e: React.MouseEvent) {
+    e.stopPropagation()
+    router.push(`/tagline/${tagline.tmdb_id}?edit=${tagline.id}`)
+  }
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (deleting) return
+    if (!window.confirm("Delete this tagline?")) return
+    setDeleting(true)
+    const res = await fetch(`/api/taglines/${tagline.id}`, { method: "DELETE" })
+    if (res.ok) {
+      onDelete?.(tagline.id)
+    } else {
+      setDeleting(false)
+    }
+  }
 
   const bwf = tagline.bwf ?? (BOX_FRAC / (tagline.zoom ?? 1))
   const bhf = tagline.bhf ?? (BOX_FRAC / (tagline.zoom ?? 1))
@@ -130,16 +156,39 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
       {/* Hover overlays — rendered after tagline text so gradients paint on top */}
       {!muralView && (
         <>
-          {/* Top: username */}
+          {/* Top: username left, edit/delete (owner only) right */}
           <div className={`hover-overlay${hovered ? " is-hovered" : ""}`} style={{
             position: "absolute", top: 0, left: 0, right: 0,
             background: "linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%)",
             padding: "9px 10px 36px",
             pointerEvents: "none",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 8,
           }}>
             <span className="overlay-text" style={{ fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.02em" }}>
               @{username}
             </span>
+            {isOwner && (
+              <div style={{ display: "flex", gap: 6, pointerEvents: "auto", flexShrink: 0 }}>
+                <button
+                  onClick={handleEdit}
+                  aria-label="Edit tagline"
+                  style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  <Pencil size={11} color="#fff" />
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  aria-label="Delete tagline"
+                  style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center", opacity: deleting ? 0.5 : 1 }}
+                >
+                  <Trash2 size={11} color="#fff" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Bottom: endorsements left, see title right */}

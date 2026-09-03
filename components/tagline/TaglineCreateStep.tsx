@@ -82,11 +82,22 @@ export interface ExistingMark {
   color?: string
 }
 
+export interface InitialTaglineData {
+  text: string
+  html: string
+  color: string
+  x: number
+  y: number
+  fontSize?: number
+}
+
 interface Props {
   posterPath: string
   movieTitle: string
   isFirstTagline: boolean
   existingMarks: ExistingMark[]
+  initialData?: InitialTaglineData
+  postLabel?: string
   onBack: () => void
   onExit: () => void
   onPost: (data: CreateTaglineData) => Promise<void>
@@ -229,7 +240,7 @@ function SingleStepTracker() {
 }
 
 export default function TaglineCreateStep({
-  posterPath, isFirstTagline, existingMarks, onBack, onExit, onPost,
+  posterPath, isFirstTagline, existingMarks, initialData, postLabel = "POST", onBack, onExit, onPost,
 }: Props) {
   const boardContainerRef = useRef<HTMLDivElement>(null)
   const contentEditableRef = useRef<HTMLDivElement>(null)
@@ -238,17 +249,30 @@ export default function TaglineCreateStep({
   const lastPtr = useRef({ x: 0, y: 0 })
   const hasAutofocused = useRef(false)
   const wasEmptyRef = useRef(true)
-  const s = useRef({ bw: 0, bh: 0, boxPos: { x: (1 - BOX_W_FRAC) / 2, y: (1 - BOX_H_FRAC) / 2 } })
+  const appliedInitialRef = useRef(false)
+  const initialBoxPos = initialData ? { x: initialData.x, y: initialData.y } : { x: (1 - BOX_W_FRAC) / 2, y: (1 - BOX_H_FRAC) / 2 }
+  const s = useRef({ bw: 0, bh: 0, boxPos: initialBoxPos })
 
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
-  const [boxPos, setBoxPos] = useState({ x: (1 - BOX_W_FRAC) / 2, y: (1 - BOX_H_FRAC) / 2 })
-  const [text, setText] = useState("")
-  const [html, setHtml] = useState("")
-  const [textColor, setTextColor] = useState("#FFFFFF")
+  const [boxPos, setBoxPos] = useState(initialBoxPos)
+  const [text, setText] = useState(initialData?.text ?? "")
+  const [html, setHtml] = useState(initialData?.html ?? "")
+  const [textColor, setTextColor] = useState(initialData?.color ?? "#FFFFFF")
   const [highlightColor, setHighlightColor] = useState<string | null>("#000000")
   const [manualFontSize, setManualFontSize] = useState(14)
   const [extractedColors, setExtractedColors] = useState<string[]>([])
   const [posting, setPosting] = useState(false)
+
+  // ── Apply initial (edit-mode) text/font-size into the DOM once the board is measured ──
+  useEffect(() => {
+    if (!initialData || appliedInitialRef.current || boardSize.h <= 0) return
+    appliedInitialRef.current = true
+    if (initialData.fontSize) setManualFontSize(Math.round(initialData.fontSize * boardSize.h))
+    if (contentEditableRef.current) {
+      contentEditableRef.current.innerHTML = initialData.html || initialData.text || ""
+      wasEmptyRef.current = !(initialData.text || initialData.html)
+    }
+  }, [initialData, boardSize.h])
 
   // ── Measure board container ───────────────────────────────────────────────
   useEffect(() => {
@@ -719,7 +743,7 @@ export default function TaglineCreateStep({
           boxShadow: text.trim() && !posting ? "0 4px 24px rgba(0,0,0,0.5)" : "none",
         }}
       >
-        {posting ? "Posting…" : "POST"}
+        {posting ? "Posting…" : postLabel}
       </button>
     </div>
   )
