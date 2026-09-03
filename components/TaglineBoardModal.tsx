@@ -198,9 +198,8 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
           onClick={!endorseLoading ? handleEndorse : undefined}
           disabled={endorseLoading}
           style={{
-            flex: 1,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            padding: "12px 22px", borderRadius: 10, border: "none",
+            padding: "12px 16px", borderRadius: 10, border: "none",
             cursor: endorseLoading ? "default" : "pointer",
             fontWeight: 700, fontSize: 14, letterSpacing: "0.01em", whiteSpace: "nowrap",
             background: endorseLoading ? "#3f3f46" : endorsed ? "#dc2626" : "#fff",
