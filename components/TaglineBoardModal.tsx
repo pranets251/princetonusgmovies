@@ -189,7 +189,7 @@ export default function TaglineBoardModal({ tmdbId, onClose }: Props) {
 
       {/* Action bar — width matches the poster's width */}
       <div className="flex flex-col md:flex-row" style={{ gap: 12, marginTop: 20, alignItems: "stretch", width: bw || undefined }}>
-      <div className="flex" style={{ gap: 12 }}>
+      <div className="flex" style={{ gap: 12, flex: 1 }}>
         {/* Endorse */}
         <button
           onMouseDown={() => !endorseLoading && setPressing("endorse")}

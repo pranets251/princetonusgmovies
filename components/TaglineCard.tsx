@@ -157,7 +157,7 @@ export default function TaglineCard({ tagline, onClick, muralView = false, mural
               {tagline.movie_endorse_count ?? 0} ♥
             </span>
             <span className="overlay-text" style={{ fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "right", whiteSpace: "nowrap" }}>
-              ⮑
+              See Movie Poster ⮑
             </span>
           </div>
         </>
