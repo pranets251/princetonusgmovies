@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
-import { Ticket, Pencil, Share2, User, X } from "lucide-react"
+import { ArrowLeft, Heart, Pencil, User } from "lucide-react"
 import { Tagline, BOX_FRAC, TMDB_ORIGINAL } from "@/lib/taglineTypes"
 import { useFonts } from "@/lib/useFonts"
 
@@ -15,20 +15,19 @@ export default function MovieBoardPage() {
   const [endorsed, setEndorsed] = useState(false)
   const [endorseCount, setEndorseCount] = useState(0)
   const [endorseLoading, setEndorseLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
   const [showContributors, setShowContributors] = useState(false)
-  const [pressing, setPressing] = useState<"endorse" | "add" | null>(null)
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const contributorsRef = useRef<HTMLDivElement>(null)
 
-  function openContributors() {
-    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null }
-    setShowContributors(true)
-  }
-  function closeContributors() {
-    closeTimer.current = setTimeout(() => setShowContributors(false), 150)
-  }
+  useEffect(() => {
+    if (!showContributors) return
+    function onDown(e: MouseEvent) {
+      if (contributorsRef.current && !contributorsRef.current.contains(e.target as Node)) setShowContributors(false)
+    }
+    document.addEventListener("mousedown", onDown, true)
+    return () => document.removeEventListener("mousedown", onDown, true)
+  }, [showContributors])
   useFonts(taglines)
 
   const boardContainerRef = useRef<HTMLDivElement>(null)
@@ -70,10 +69,6 @@ export default function MovieBoardPage() {
     }
   }
   function handleAdd() { router.push(`/tagline/${tmdb_id}`) }
-  async function handleShare() {
-    await navigator.clipboard.writeText(window.location.href)
-    setCopied(true); setTimeout(() => setCopied(false), 2000)
-  }
 
   const boardTaglines = useMemo(() =>
     [...taglines].sort((a, b) => (b.created_at > a.created_at ? 1 : -1)).slice(0, 10),
@@ -95,27 +90,36 @@ export default function MovieBoardPage() {
         className="flex items-center justify-between px-5 flex-shrink-0"
         style={{ height: 64 }}
       >
-        {/* Person icon + contributor dropdown */}
-        <div
-          style={{ position: "relative" }}
-          onMouseEnter={openContributors}
-          onMouseLeave={closeContributors}
-        >
-          <button style={{
+        {/* Back */}
+        <button
+          onClick={() => router.back()}
+          style={{
             width: 36, height: 36, borderRadius: 8,
             background: "#3f3f46", border: "none",
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", flexShrink: 0,
-          }}>
+          }}
+        >
+          <ArrowLeft size={18} className="text-zinc-300" />
+        </button>
+
+        {/* Person icon + contributor dropdown */}
+        <div ref={contributorsRef} style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowContributors(v => !v)}
+            style={{
+              width: 36, height: 36, borderRadius: 8,
+              background: "#3f3f46", border: "none",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", flexShrink: 0,
+            }}
+          >
             <User size={18} className="text-zinc-300" />
           </button>
 
           {showContributors && (
-            <div
-              onMouseEnter={openContributors}
-              onMouseLeave={closeContributors}
-              style={{
-              position: "absolute", top: "100%", left: 0, marginTop: 6,
+            <div style={{
+              position: "absolute", top: "100%", right: 0, marginTop: 6,
               background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.12)",
               borderRadius: 12, zIndex: 100,
               boxShadow: "0 8px 32px rgba(0,0,0,0.8)",
@@ -148,13 +152,6 @@ export default function MovieBoardPage() {
             </div>
           )}
         </div>
-
-        <button
-          onClick={() => router.push("/")}
-          className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors flex-shrink-0"
-        >
-          <X size={14} className="text-zinc-400" />
-        </button>
       </div>
 
       {/* ── Board area ── */}
@@ -221,70 +218,37 @@ export default function MovieBoardPage() {
       </div>
 
       {/* ── Action bar ── */}
-      <div className="flex items-center justify-center flex-shrink-0" style={{ height: 76, gap: 12 }}>
+      <div className="flex items-center justify-center flex-shrink-0" style={{ height: 64, gap: 28 }}>
         {/* Endorse */}
         <button
-          onMouseDown={() => !endorseLoading && setPressing("endorse")}
-          onMouseUp={() => setPressing(null)}
-          onMouseLeave={() => setPressing(null)}
           onClick={!endorseLoading ? handleEndorse : undefined}
           disabled={endorseLoading}
           style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "10px 22px", borderRadius: 10, border: "none",
+            display: "flex", alignItems: "center", gap: 7,
+            background: "none", border: "none", padding: 0,
             cursor: endorseLoading ? "default" : "pointer",
-            fontWeight: 700, fontSize: 14, letterSpacing: "0.01em",
-            background: endorsed && !endorseLoading ? "#dc2626" : "#3f3f46",
-            color: endorseLoading ? "#71717a" : endorsed ? "#fff" : "#ef4444",
-            boxShadow: pressing === "endorse"
-              ? `0 1px 0 ${endorsed ? "#991b1b" : "#27272a"}, 0 2px 4px rgba(0,0,0,0.35)`
-              : `0 4px 0 ${endorsed ? "#991b1b" : "#27272a"}, 0 6px 14px rgba(0,0,0,0.35)`,
-            transform: pressing === "endorse" ? "translateY(3px)" : "translateY(0)",
-            transition: "transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease",
           }}
         >
-          <Ticket size={18} color={endorseLoading ? "#71717a" : endorsed ? "#fff" : "#ef4444"} />
-          {endorseLoading ? "…" : endorsed ? "Endorsed!" : "Endorse"}
+          <Heart
+            size={20}
+            fill={endorsed && !endorseLoading ? "#dc2626" : "none"}
+            color={endorseLoading ? "#71717a" : endorsed ? "#dc2626" : "#e4e4e7"}
+          />
+          <span style={{ fontSize: 16, fontWeight: 600, color: endorseLoading ? "#71717a" : "#e4e4e7" }}>
+            {endorseLoading ? "…" : endorseCount}
+          </span>
         </button>
 
         {/* Add tagline */}
         <button
-          onMouseDown={() => setPressing("add")}
-          onMouseUp={() => setPressing(null)}
-          onMouseLeave={() => { setPressing(null); }}
           onClick={handleAdd}
           style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "10px 22px", borderRadius: 10, border: "none", cursor: "pointer",
-            fontWeight: 700, fontSize: 14, letterSpacing: "0.01em",
-            background: "#3f3f46",
-            color: "#F5B800",
-            boxShadow: pressing === "add"
-              ? "0 1px 0 #27272a, 0 2px 4px rgba(0,0,0,0.35)"
-              : "0 4px 0 #27272a, 0 6px 14px rgba(0,0,0,0.35)",
-            transform: pressing === "add" ? "translateY(3px)" : "translateY(0)",
-            transition: "transform 0.08s ease, box-shadow 0.08s ease",
-          }}
-        >
-          <Pencil size={18} color="#F5B800" />
-          Add your own tagline
-        </button>
-
-        {/* Share */}
-        <button
-          onClick={handleShare}
-          style={{
             display: "flex", alignItems: "center", gap: 7,
-            padding: "10px 16px", borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer",
-            background: "transparent",
-            color: copied ? "#a1a1aa" : "#71717a",
-            fontSize: 13, fontWeight: 500,
-            transition: "color 0.15s ease",
+            background: "none", border: "none", padding: 0, cursor: "pointer",
           }}
         >
-          <Share2 size={16} color={copied ? "#a1a1aa" : "#71717a"} />
-          {copied ? "Copied!" : "Share"}
+          <Pencil size={18} color="#e4e4e7" />
+          <span style={{ fontSize: 16, fontWeight: 600, color: "#e4e4e7" }}>Add your own</span>
         </button>
       </div>
     </div>

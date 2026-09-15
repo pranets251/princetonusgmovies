@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Suspense } from "react"
 import BoardThumbnail from "@/components/BoardThumbnail"
 import DashedMovieCard from "@/components/DashedMovieCard"
-import TaglineBoardModal from "@/components/TaglineBoardModal"
 import SearchBox from "@/components/SearchBox"
 import { Tagline } from "@/lib/taglineTypes"
 import { useFonts } from "@/lib/useFonts"
@@ -33,7 +32,6 @@ function SearchResults() {
   const [boardTaglines, setBoardTaglines] = useState<Record<number, Tagline[]>>({})
   const [loading, setLoading] = useState(false)
   const [doneQ, setDoneQ] = useState<string | null>(null)
-  const [boardModalTmdbId, setBoardModalTmdbId] = useState<number | null>(null)
   useFonts(Object.values(boardTaglines).flat())
 
   useEffect(() => {
@@ -117,7 +115,7 @@ function SearchResults() {
                     movieTitle={m.title}
                     tmdbId={m.id}
                     endorseCount={tags[0]?.movie_endorse_count}
-                    onClick={() => setBoardModalTmdbId(m.id)}
+                    onClick={() => router.push(`/movie/${m.id}`)}
                   />
                 ) : (
                   <DashedMovieCard
@@ -158,13 +156,6 @@ function SearchResults() {
         </div>
       )}
     </div>
-
-    {boardModalTmdbId !== null && (
-      <TaglineBoardModal
-        tmdbId={boardModalTmdbId}
-        onClose={() => setBoardModalTmdbId(null)}
-      />
-    )}
     </>
   )
 }

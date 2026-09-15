@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import TaglineCard from "@/components/TaglineCard"
 import BoardThumbnail from "@/components/BoardThumbnail"
-import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
 import { useFonts } from "@/lib/useFonts"
 
@@ -36,7 +35,6 @@ export default function ProfilePage() {
   const [likedLoading, setLikedLoading] = useState(false)
   const [likedLoaded, setLikedLoaded] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [boardModalTmdbId, setBoardModalTmdbId] = useState<number | null>(null)
   const [followLoading, setFollowLoading] = useState(false)
 
   const likedTaglines = useMemo(() => likedMovies.flatMap(m => m.taglines), [likedMovies])
@@ -160,7 +158,7 @@ export default function ProfilePage() {
             <div className="p-5" style={{ columns: 2, columnGap: 12 }}>
               {taglines.map(t => (
                 <div key={t.id} style={{ breakInside: "avoid", marginBottom: 12 }}>
-                  <TaglineCard tagline={t} onClick={() => setBoardModalTmdbId(t.tmdb_id)} onDelete={id => setTaglines(ts => ts.filter(x => x.id !== id))} />
+                  <TaglineCard tagline={t} onClick={() => router.push(`/movie/${t.tmdb_id}`)} onDelete={id => setTaglines(ts => ts.filter(x => x.id !== id))} />
                 </div>
               ))}
             </div>
@@ -184,7 +182,7 @@ export default function ProfilePage() {
                   posterPath={m.poster_path}
                   taglines={m.taglines}
                   tmdbId={m.tmdb_id}
-                  onClick={() => setBoardModalTmdbId(m.tmdb_id)}
+                  onClick={() => router.push(`/movie/${m.tmdb_id}`)}
                 />
               ))}
             </div>
@@ -192,13 +190,6 @@ export default function ProfilePage() {
         )}
       </div>
     </div>
-
-    {boardModalTmdbId !== null && (
-      <TaglineBoardModal
-        tmdbId={boardModalTmdbId}
-        onClose={() => setBoardModalTmdbId(null)}
-      />
-    )}
     </>
   )
 }

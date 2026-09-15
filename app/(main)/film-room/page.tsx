@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { Search, ChevronDown } from "lucide-react"
 import BoardThumbnail from "@/components/BoardThumbnail"
 import DashedMovieCard from "@/components/DashedMovieCard"
-import TaglineBoardModal from "@/components/TaglineBoardModal"
 import { Tagline } from "@/lib/taglineTypes"
 import { useFonts } from "@/lib/useFonts"
 
@@ -36,6 +36,7 @@ interface TmdbResult {
 const normalize = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
 
 export default function FilmRoomPage() {
+  const router = useRouter()
   const [period, setPeriod] = useState<Period>("all")
   const [showPeriodMenu, setShowPeriodMenu] = useState(false)
   const [movies, setMovies] = useState<Movie[]>([])
@@ -43,7 +44,6 @@ export default function FilmRoomPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [tmdbDashed, setTmdbDashed] = useState<TmdbResult[]>([])
   const [tmdbSearching, setTmdbSearching] = useState(false)
-  const [boardModalTmdbId, setBoardModalTmdbId] = useState<number | null>(null)
 
   const allTaglines = useMemo(() => movies.flatMap(m => m.taglines), [movies])
   useFonts(allTaglines)
@@ -131,7 +131,7 @@ export default function FilmRoomPage() {
                   movieTitle={movie.title}
                   tmdbId={movie.tmdb_id}
                   endorseCount={movie.endorse_count}
-                  onClick={() => setBoardModalTmdbId(movie.tmdb_id)}
+                  onClick={() => router.push(`/movie/${movie.tmdb_id}`)}
                 />
                 {/* Rank number permanently below each poster */}
                 <p style={{ textAlign: "center", fontSize: 13, color: "#a1a1aa", margin: 0, lineHeight: 1 }}>
@@ -152,13 +152,6 @@ export default function FilmRoomPage() {
         )}
       </div>
     </div>
-
-    {boardModalTmdbId !== null && (
-      <TaglineBoardModal
-        tmdbId={boardModalTmdbId}
-        onClose={() => setBoardModalTmdbId(null)}
-      />
-    )}
     </>
   )
 }
