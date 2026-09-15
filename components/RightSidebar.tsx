@@ -130,22 +130,27 @@ function MovieSearchSlot({ value, onSelect }: { value: RatingMovie; onSelect: (m
   )
 }
 
-export default function RightSidebar() {
+interface RightSidebarProps {
+  initialUpcoming?: UpcomingMovie[]
+  initialRatingMovies?: RatingMovie[]
+}
+
+export default function RightSidebar({ initialUpcoming, initialRatingMovies }: RightSidebarProps) {
   const currentUsername = useCurrentUsername()
   const isAdmin = currentUsername === ADMIN_USERNAME
 
-  const [upcoming, setUpcoming] = useState<UpcomingMovie[]>(DEFAULT_UPCOMING)
-  const [ratingMovies, setRatingMovies] = useState<RatingMovie[]>(DEFAULT_RATING_MOVIES)
+  const [upcoming, setUpcoming] = useState<UpcomingMovie[]>(initialUpcoming ?? DEFAULT_UPCOMING)
+  const [ratingMovies, setRatingMovies] = useState<RatingMovie[]>(initialRatingMovies ?? DEFAULT_RATING_MOVIES)
   const [pressingKey, setPressingKey] = useState<string | null>(null)
   const voteVersionRef = useRef<Record<string, number>>({})
   const [ratings, setRatings] = useState<Record<string, RatingState>>({})
 
   const [editingUpcoming, setEditingUpcoming] = useState(false)
-  const [upcomingDraft, setUpcomingDraft] = useState<UpcomingMovie[]>(DEFAULT_UPCOMING)
+  const [upcomingDraft, setUpcomingDraft] = useState<UpcomingMovie[]>(initialUpcoming ?? DEFAULT_UPCOMING)
   const [savingUpcoming, setSavingUpcoming] = useState(false)
 
   const [editingRatingMovies, setEditingRatingMovies] = useState(false)
-  const [ratingMoviesDraft, setRatingMoviesDraft] = useState<RatingMovie[]>(DEFAULT_RATING_MOVIES)
+  const [ratingMoviesDraft, setRatingMoviesDraft] = useState<RatingMovie[]>(initialRatingMovies ?? DEFAULT_RATING_MOVIES)
   const [savingRatingMovies, setSavingRatingMovies] = useState(false)
 
   function loadRatings() {
@@ -156,14 +161,7 @@ export default function RightSidebar() {
   }
 
   useEffect(() => {
-    fetch("/api/config/weekend-widgets")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.upcoming) setUpcoming(data.upcoming)
-        if (data?.ratingMovies) setRatingMovies(data.ratingMovies)
-      })
-      .catch(() => {})
-      .finally(loadRatings)
+    loadRatings()
   }, [])
 
   async function submitRating(movieKey: string, liked: boolean) {

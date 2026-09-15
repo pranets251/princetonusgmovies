@@ -6,15 +6,22 @@ import RightSidebar from "@/components/RightSidebar"
 import BottomNav from "@/components/BottomNav"
 import GlobalCreateModal from "@/components/GlobalCreateModal"
 import { CurrentUserProvider } from "@/components/CurrentUserContext"
+import { DEFAULT_UPCOMING, DEFAULT_RATING_MOVIES } from "@/lib/weekendConfig"
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const email = await getSessionEmail()
   if (!email) redirect("/login")
 
-  const profileDoc = await adminDb.collection("profiles").doc(email).get()
+  const [profileDoc, weekendConfigDoc] = await Promise.all([
+    adminDb.collection("profiles").doc(email).get(),
+    adminDb.collection("config").doc("weekend_widgets").get(),
+  ])
   if (!profileDoc.exists) redirect("/username-setup")
 
   const username = (profileDoc.data() as any).username as string
+  const weekendConfig = weekendConfigDoc.exists ? (weekendConfigDoc.data() as any) : {}
+  const upcoming = weekendConfig.upcoming ?? DEFAULT_UPCOMING
+  const ratingMovies = weekendConfig.ratingMovies ?? DEFAULT_RATING_MOVIES
 
   return (
     <CurrentUserProvider username={username}>
@@ -28,7 +35,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         </main>
 
         <div className="hidden lg:flex">
-          <RightSidebar />
+          <RightSidebar initialUpcoming={upcoming} initialRatingMovies={ratingMovies} />
         </div>
         <GlobalCreateModal />
         <BottomNav username={username} />
