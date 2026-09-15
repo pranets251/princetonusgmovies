@@ -18,6 +18,7 @@ export default function MovieBoardPage() {
   const [loading, setLoading] = useState(true)
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
   const [showContributors, setShowContributors] = useState(false)
+  const [heartPopKey, setHeartPopKey] = useState(0)
   const contributorsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export default function MovieBoardPage() {
   }, [tmdb_id])
 
   async function handleEndorse() {
+    setHeartPopKey(k => k + 1)
     const newEndorsed = !endorsed
     setEndorsed(newEndorsed); setEndorseCount(c => c + (newEndorsed ? 1 : -1))
     const res = await fetch(`/api/movies/${tmdb_id}/endorse`, { method: "POST" })
@@ -212,19 +214,25 @@ export default function MovieBoardPage() {
         </div>
       </div>
 
-      {/* ── Action bar ── */}
-      <div className="flex items-center justify-center flex-shrink-0" style={{ height: 64, gap: 28, borderTop: "1px solid var(--border)" }}>
+      {/* ── Action bar — icons sit at the poster's thirds ── */}
+      <div className="relative flex-shrink-0 mx-auto w-full" style={{ height: 64, maxWidth: bw || undefined, borderTop: "1px solid var(--border)" }}>
         {/* Endorse */}
         <button
           onClick={!endorseLoading ? handleEndorse : undefined}
           disabled={endorseLoading}
+          className="hover:bg-[rgba(220,38,38,0.14)] transition-colors"
           style={{
+            position: "absolute", left: bw > 0 ? bw / 3 : "33.33%", top: "50%",
+            transform: "translate(-50%, -50%)",
             display: "flex", alignItems: "center", gap: 7,
-            background: "none", border: "none", padding: 0,
+            background: "none", border: "none", borderRadius: 10,
+            padding: "8px 16px",
             cursor: endorseLoading ? "default" : "pointer",
           }}
         >
           <Heart
+            key={heartPopKey}
+            className={heartPopKey > 0 ? "heart-pop" : undefined}
             size={20}
             fill={endorsed && !endorseLoading ? "#dc2626" : "none"}
             color={endorseLoading ? "#71717a" : endorsed ? "#dc2626" : "#e4e4e7"}
@@ -237,9 +245,14 @@ export default function MovieBoardPage() {
         {/* Add tagline */}
         <button
           onClick={handleAdd}
+          className="hover:bg-[rgba(245,184,0,0.14)] transition-colors"
           style={{
+            position: "absolute", left: bw > 0 ? (bw * 2) / 3 : "66.66%", top: "50%",
+            transform: "translate(-50%, -50%)",
             display: "flex", alignItems: "center", gap: 7,
-            background: "none", border: "none", padding: 0, cursor: "pointer",
+            background: "none", border: "none", borderRadius: 10,
+            padding: "8px 16px",
+            cursor: "pointer",
           }}
         >
           <Pencil size={18} color="#e4e4e7" />
