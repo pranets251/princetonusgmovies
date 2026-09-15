@@ -36,10 +36,13 @@ export default function MovieBoardPage() {
     const el = boardContainerRef.current
     if (!el) return
     function measure() {
+      const PAD = 48
       const { width, height } = el!.getBoundingClientRect()
-      const byW = { w: width, h: width * 1.5 }
-      const byH = { w: height * (2 / 3), h: height }
-      setBoardSize(byW.h <= height ? byW : byH)
+      const availW = width - PAD
+      const availH = height - PAD
+      const byW = { w: availW, h: availW * 1.5 }
+      const byH = { w: availH * (2 / 3), h: availH }
+      setBoardSize(byW.h <= availH ? byW : byH)
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -88,7 +91,7 @@ export default function MovieBoardPage() {
       {/* ── Header ── */}
       <div
         className="flex items-center justify-between px-5 flex-shrink-0"
-        style={{ height: 64 }}
+        style={{ height: 64, borderBottom: "1px solid var(--border)" }}
       >
         {/* Back */}
         <button
@@ -125,14 +128,6 @@ export default function MovieBoardPage() {
               boxShadow: "0 8px 32px rgba(0,0,0,0.8)",
               minWidth: 230, maxHeight: 280, overflowY: "auto",
             }}>
-              <p style={{
-                padding: "10px 14px",
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
-                fontSize: 11, fontStyle: "italic", color: "#71717a",
-                lineHeight: 1.45, margin: 0,
-              }}>
-                * Only the last 10 taglines appear on Tagline Boards
-              </p>
               {contributors.length === 0 ? (
                 <p style={{ padding: "10px 14px", fontSize: 12, color: "#52525b", margin: 0 }}>No contributors yet.</p>
               ) : contributors.map(u => (
@@ -218,7 +213,7 @@ export default function MovieBoardPage() {
       </div>
 
       {/* ── Action bar ── */}
-      <div className="flex items-center justify-center flex-shrink-0" style={{ height: 64, gap: 28 }}>
+      <div className="flex items-center justify-center flex-shrink-0" style={{ height: 64, gap: 28, borderTop: "1px solid var(--border)" }}>
         {/* Endorse */}
         <button
           onClick={!endorseLoading ? handleEndorse : undefined}
@@ -248,7 +243,7 @@ export default function MovieBoardPage() {
           }}
         >
           <Pencil size={18} color="#e4e4e7" />
-          <span style={{ fontSize: 16, fontWeight: 600, color: "#e4e4e7" }}>Add your own</span>
+          <span style={{ fontSize: 16, fontWeight: 600, color: "#e4e4e7" }}>{taglines.length}</span>
         </button>
       </div>
     </div>
