@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
+import { FieldValue } from "firebase-admin/firestore"
 import { adminDb } from "@/lib/firebase-admin"
 import { getSessionEmail } from "@/lib/session"
-import { DEFAULT_UPCOMING, DEFAULT_RATING_MOVIES, RatingMovie, slugify } from "@/lib/weekendConfig"
+import { DEFAULT_UPCOMING, DEFAULT_RATING_MOVIES, RatingMovie } from "@/lib/weekendConfig"
 
 const ADMIN_USERNAME = "ps3514"
 
@@ -47,20 +48,26 @@ export async function PATCH(req: Request) {
   const csvExports: { filename: string; content: string }[] = []
 
   if (Array.isArray(ratingMovies)) {
+    // Movies are chosen from TMDB search results, so each comes with a real tmdb_id —
+    // use that as the canonical key so it lines up with the site's existing
+    // "already screened" list (config/highlighted_movies), which is keyed by tmdb_id.
     const nextRatingMovies: RatingMovie[] = ratingMovies.map((m: any) => {
       const title = String(m.title ?? "").trim()
-      return { key: m.key || slugify(title), title }
+      const tmdb_id = typeof m.tmdb_id === "number" ? m.tmdb_id : undefined
+      return { key: tmdb_id ? String(tmdb_id) : m.key, title, tmdb_id }
     })
     const nextKeys = new Set(nextRatingMovies.map(m => m.key))
     const removed = currentRatingMovies.filter(m => !nextKeys.has(m.key))
 
-    for (const movie of removed) {
-      await adminDb.collection("played_movies").add({
-        key: movie.key,
-        title: movie.title,
-        played_at: new Date().toISOString(),
-      })
+    const newlyPlayedTmdbIds = removed.map(m => m.tmdb_id).filter((id): id is number => typeof id === "number")
+    if (newlyPlayedTmdbIds.length > 0) {
+      await adminDb.collection("config").doc("highlighted_movies").set(
+        { tmdb_ids: FieldValue.arrayUnion(...newlyPlayedTmdbIds) },
+        { merge: true }
+      )
+    }
 
+    for (const movie of removed) {
       const ratingsSnap = await adminDb.collection("weekend_ratings").where("movie_key", "==", movie.key).get()
       const rows = ratingsSnap.docs.map(d => {
         const rd = d.data() as any

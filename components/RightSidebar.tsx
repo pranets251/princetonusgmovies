@@ -46,6 +46,90 @@ function downloadCsv(filename: string, content: string) {
 
 const editInputClass = "bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-500"
 
+interface TmdbSearchResult {
+  id: number
+  title: string
+  release_date: string
+  poster_path: string | null
+}
+
+// Forces the admin to pick an actual TMDB title (rather than type anything freehand),
+// since the selection needs a real tmdb_id to later mark the movie as already-played.
+function MovieSearchSlot({ value, onSelect }: { value: RatingMovie; onSelect: (m: { tmdb_id: number; title: string }) => void }) {
+  const [query, setQuery] = useState(value.title)
+  const [results, setResults] = useState<TmdbSearchResult[]>([])
+  const [open, setOpen] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onDown(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onDown, true)
+    return () => document.removeEventListener("mousedown", onDown, true)
+  }, [open])
+
+  function handleQueryChange(q: string) {
+    setQuery(q)
+    setOpen(true)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (!q.trim()) { setResults([]); return }
+    setSearching(true)
+    timerRef.current = setTimeout(async () => {
+      const res = await fetch(`/api/tmdb?q=${encodeURIComponent(q)}`)
+      const data = res.ok ? await res.json() : { results: [] }
+      setResults(data.results ?? [])
+      setSearching(false)
+    }, 350)
+  }
+
+  function selectResult(r: TmdbSearchResult) {
+    const year = r.release_date?.slice(0, 4)
+    const title = year ? `${r.title} (${year})` : r.title
+    setQuery(title)
+    setOpen(false)
+    onSelect({ tmdb_id: r.id, title })
+  }
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <input
+        value={query}
+        onChange={e => handleQueryChange(e.target.value)}
+        onFocus={() => setOpen(true)}
+        placeholder="Search TMDB for a movie…"
+        className={`w-full ${editInputClass}`}
+      />
+      {open && query.trim().length > 0 && (
+        <div style={{
+          position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4,
+          background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8,
+          zIndex: 50, maxHeight: 220, overflowY: "auto",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+        }}>
+          {searching ? (
+            <p style={{ padding: "8px 10px", fontSize: 11, color: "#71717a", margin: 0 }}>Searching…</p>
+          ) : results.length === 0 ? (
+            <p style={{ padding: "8px 10px", fontSize: 11, color: "#71717a", margin: 0 }}>No matches.</p>
+          ) : results.map(r => (
+            <button
+              key={r.id}
+              onClick={() => selectResult(r)}
+              className="hover:bg-white/5"
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 10px", background: "none", border: "none", color: "#e4e4e7", fontSize: 12, cursor: "pointer" }}
+            >
+              {r.title}{r.release_date ? ` (${r.release_date.slice(0, 4)})` : ""}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function RightSidebar() {
   const currentUsername = useCurrentUsername()
   const isAdmin = currentUsername === ADMIN_USERNAME
@@ -61,7 +145,7 @@ export default function RightSidebar() {
   const [savingUpcoming, setSavingUpcoming] = useState(false)
 
   const [editingRatingMovies, setEditingRatingMovies] = useState(false)
-  const [ratingMoviesDraft, setRatingMoviesDraft] = useState<string[]>(DEFAULT_RATING_MOVIES.map(m => m.title))
+  const [ratingMoviesDraft, setRatingMoviesDraft] = useState<RatingMovie[]>(DEFAULT_RATING_MOVIES)
   const [savingRatingMovies, setSavingRatingMovies] = useState(false)
 
   function loadRatings() {
@@ -136,12 +220,12 @@ export default function RightSidebar() {
   }
 
   function startEditRatingMovies() {
-    setRatingMoviesDraft(ratingMovies.map(m => m.title))
+    setRatingMoviesDraft(ratingMovies)
     setEditingRatingMovies(true)
   }
 
-  function updateRatingMovieDraft(i: number, value: string) {
-    setRatingMoviesDraft(d => d.map((t, idx) => idx === i ? value : t))
+  function updateRatingMovieDraft(i: number, selected: { tmdb_id: number; title: string }) {
+    setRatingMoviesDraft(d => d.map((m, idx) => idx === i ? { key: String(selected.tmdb_id), ...selected } : m))
   }
 
   async function saveRatingMovies() {
@@ -150,7 +234,7 @@ export default function RightSidebar() {
       const res = await fetch("/api/config/weekend-widgets", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ratingMovies: ratingMoviesDraft.map(title => ({ title })) }),
+        body: JSON.stringify({ ratingMovies: ratingMoviesDraft }),
       })
       if (res.ok) {
         const data = await res.json()
@@ -230,11 +314,12 @@ export default function RightSidebar() {
 
         {editingRatingMovies ? (
           <div className="flex flex-col gap-2">
-            {ratingMoviesDraft.map((title, i) => (
-              <input key={i} value={title} onChange={e => updateRatingMovieDraft(i, e.target.value)} placeholder="Movie title" className={`w-full ${editInputClass}`} />
+            {ratingMoviesDraft.map((m, i) => (
+              <MovieSearchSlot key={i} value={m} onSelect={selected => updateRatingMovieDraft(i, selected)} />
             ))}
             <p className="text-[11px] text-zinc-500 leading-relaxed">
-              Swapping out a movie here marks it as played and downloads a CSV of its ratings.
+              Swapping out a movie here marks it as already-played (the same green highlight
+              used elsewhere on the site) and downloads a CSV of its ratings.
             </p>
             <div className="flex gap-2 mt-1">
               <button onClick={saveRatingMovies} disabled={savingRatingMovies} className="flex-1 text-xs font-semibold bg-white text-black rounded py-1.5 disabled:opacity-50">
