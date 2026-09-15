@@ -19,6 +19,8 @@ export default function MovieBoardPage() {
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
   const [showContributors, setShowContributors] = useState(false)
   const [heartPopKey, setHeartPopKey] = useState(0)
+  const [heartHover, setHeartHover] = useState(false)
+  const [pencilHover, setPencilHover] = useState(false)
   const contributorsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -219,25 +221,28 @@ export default function MovieBoardPage() {
         {/* Endorse */}
         <button
           onClick={!endorseLoading ? handleEndorse : undefined}
+          onMouseEnter={() => setHeartHover(true)}
+          onMouseLeave={() => setHeartHover(false)}
           disabled={endorseLoading}
-          className="hover:bg-[rgba(220,38,38,0.14)] transition-colors"
           style={{
             position: "absolute", left: bw > 0 ? bw / 3 : "33.33%", top: "50%",
             transform: "translate(-50%, -50%)",
-            display: "flex", alignItems: "center", gap: 7,
-            background: "none", border: "none", borderRadius: 10,
-            padding: "8px 16px",
+            display: "flex", alignItems: "center", gap: 8,
+            background: heartHover ? "rgba(220,38,38,0.14)" : "none",
+            border: "none", borderRadius: 10,
+            padding: "10px 18px",
             cursor: endorseLoading ? "default" : "pointer",
+            transition: "background 0.15s ease",
           }}
         >
           <Heart
             key={heartPopKey}
             className={heartPopKey > 0 ? "heart-pop" : undefined}
-            size={20}
+            size={26}
             fill={endorsed && !endorseLoading ? "#dc2626" : "none"}
             color={endorseLoading ? "#71717a" : endorsed ? "#dc2626" : "#e4e4e7"}
           />
-          <span style={{ fontSize: 16, fontWeight: 600, color: endorseLoading ? "#71717a" : "#e4e4e7" }}>
+          <span style={{ fontSize: 18, fontWeight: 600, color: endorseLoading ? "#71717a" : "#e4e4e7" }}>
             {endorseLoading ? "…" : endorseCount}
           </span>
         </button>
@@ -245,18 +250,21 @@ export default function MovieBoardPage() {
         {/* Add tagline */}
         <button
           onClick={handleAdd}
-          className="hover:bg-[rgba(245,184,0,0.14)] transition-colors"
+          onMouseEnter={() => setPencilHover(true)}
+          onMouseLeave={() => setPencilHover(false)}
           style={{
             position: "absolute", left: bw > 0 ? (bw * 2) / 3 : "66.66%", top: "50%",
             transform: "translate(-50%, -50%)",
-            display: "flex", alignItems: "center", gap: 7,
-            background: "none", border: "none", borderRadius: 10,
-            padding: "8px 16px",
+            display: "flex", alignItems: "center", gap: 8,
+            background: pencilHover ? "rgba(245,184,0,0.14)" : "none",
+            border: "none", borderRadius: 10,
+            padding: "10px 18px",
             cursor: "pointer",
+            transition: "background 0.15s ease",
           }}
         >
-          <Pencil size={18} color="#e4e4e7" />
-          <span style={{ fontSize: 16, fontWeight: 600, color: "#e4e4e7" }}>{taglines.length}</span>
+          <Pencil size={24} color="#e4e4e7" />
+          <span style={{ fontSize: 18, fontWeight: 600, color: "#e4e4e7" }}>{taglines.length}</span>
         </button>
       </div>
     </div>
