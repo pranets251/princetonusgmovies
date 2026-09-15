@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react"
 import { ArrowLeft, X, Highlighter } from "lucide-react"
 import { TMDB_ORIGINAL, TMDB_W780, BOX_FRAC } from "@/lib/taglineTypes"
+import { useIsMobile } from "@/lib/useIsMobile"
 import { ProgressTracker } from "./PosterPicker"
 
 const FONT = "Cormorant Garamond"
@@ -14,7 +15,6 @@ const BOX_W_FRAC = 0.2
 const BOX_H_FRAC = 0.2
 
 const THUMB_W = 340
-const THUMB_H = THUMB_W * 3 / 2  // 585px — 2:3 portrait
 
 function getTextWithLineBreaks(el: HTMLElement): string {
   return el.innerHTML
@@ -159,7 +159,8 @@ function ColorPalette({ value, onChange, suggestedColors, label, noColor, icon }
   function handleToggle() {
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
-      setPopupPos({ top: rect.top + rect.height / 2, left: rect.right + 8 })
+      const left = Math.min(rect.right + 8, window.innerWidth - 296)
+      setPopupPos({ top: rect.top + rect.height / 2, left: Math.max(8, left) })
     }
     setOpen(v => !v)
   }
@@ -242,18 +243,22 @@ function SingleStepTracker() {
 export default function TaglineCreateStep({
   posterPath, isFirstTagline, existingMarks, initialData, postLabel = "POST", onBack, onExit, onPost,
 }: Props) {
+  const isMobile = useIsMobile()
+  const [mobileStep, setMobileStep] = useState<"position" | "compose">("position")
+
   const boardContainerRef = useRef<HTMLDivElement>(null)
+  const composeContainerRef = useRef<HTMLDivElement>(null)
   const contentEditableRef = useRef<HTMLDivElement>(null)
   const savedRangeRef = useRef<Range | null>(null)
   const draggingRef = useRef(false)
   const lastPtr = useRef({ x: 0, y: 0 })
-  const hasAutofocused = useRef(false)
   const wasEmptyRef = useRef(true)
   const appliedInitialRef = useRef(false)
   const initialBoxPos = initialData ? { x: initialData.x, y: initialData.y } : { x: (1 - BOX_W_FRAC) / 2, y: (1 - BOX_H_FRAC) / 2 }
   const s = useRef({ bw: 0, bh: 0, boxPos: initialBoxPos })
 
   const [boardSize, setBoardSize] = useState({ w: 0, h: 0 })
+  const [composeW, setComposeW] = useState(0)
   const [boxPos, setBoxPos] = useState(initialBoxPos)
   const [text, setText] = useState(initialData?.text ?? "")
   const [html, setHtml] = useState(initialData?.html ?? "")
@@ -263,23 +268,25 @@ export default function TaglineCreateStep({
   const [extractedColors, setExtractedColors] = useState<string[]>([])
   const [posting, setPosting] = useState(false)
 
-  // ── Apply initial (edit-mode) text/font-size into the DOM once the board is measured ──
+  const showLiveEditor = !isMobile || mobileStep === "compose"
+
+  // ── Apply initial (edit-mode) text/font-size into the DOM once the live editor exists ──
   useEffect(() => {
-    if (!initialData || appliedInitialRef.current || boardSize.h <= 0) return
+    if (!initialData || appliedInitialRef.current || boardSize.h <= 0 || !showLiveEditor) return
+    if (!contentEditableRef.current) return
     appliedInitialRef.current = true
     if (initialData.fontSize) setManualFontSize(Math.round(initialData.fontSize * boardSize.h))
-    if (contentEditableRef.current) {
-      contentEditableRef.current.innerHTML = initialData.html || initialData.text || ""
-      wasEmptyRef.current = !(initialData.text || initialData.html)
-    }
-  }, [initialData, boardSize.h])
+    contentEditableRef.current.innerHTML = initialData.html || initialData.text || ""
+    wasEmptyRef.current = !(initialData.text || initialData.html)
+  }, [initialData, boardSize.h, showLiveEditor])
 
-  // ── Measure board container ───────────────────────────────────────────────
+  // ── Measure board container (re-observes whenever the mobile/desktop or
+  //    position/compose branch swaps in a different container element) ──
   useEffect(() => {
     const el = boardContainerRef.current
     if (!el) return
     function measure() {
-      const BTN_COL = 52  // 40px buttons + 12px gap
+      const BTN_COL = isMobile ? 0 : 52  // 40px buttons + 12px gap (desktop color rail only)
       const PAD = 40      // 20px padding each side
       const { width, height } = el!.getBoundingClientRect()
       const availW = width - PAD - BTN_COL
@@ -295,15 +302,27 @@ export default function TaglineCreateStep({
     const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [isMobile, mobileStep])
 
-  // ── Auto-focus on mount (wait for first paint so the element is interactive) ─
+  // ── Measure the mobile compose preview's available width ──
   useEffect(() => {
+    const el = composeContainerRef.current
+    if (!el) return
+    function measure() { setComposeW(Math.min(THUMB_W, el!.getBoundingClientRect().width)) }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [isMobile, mobileStep])
+
+  // ── Auto-focus once the live editor is actually on screen ──
+  useEffect(() => {
+    if (!showLiveEditor) return
     const raf = requestAnimationFrame(() => {
       contentEditableRef.current?.focus()
     })
     return () => cancelAnimationFrame(raf)
-  }, [])
+  }, [showLiveEditor])
 
   // ── Sync font size directly to the DOM node ───────────────────────────────
   // React's reconciler can skip style updates on user-modified contentEditable
@@ -395,6 +414,32 @@ export default function TaglineCreateStep({
     setText(getTextWithLineBreaks(ce)); setHtml(normalizeHtml(ce.innerHTML))
   }, [])
 
+  function handleContentInput(e: React.FormEvent<HTMLDivElement>) {
+    const ce = e.currentTarget
+    const isEmpty = !ce.textContent
+
+    // Priming the very first character(s) with the active highlight:
+    // execCommand can't carry a "current format" into completely empty
+    // content, but it reliably extends an existing highlighted span once
+    // one exists — so apply it once right as content first appears, then
+    // let normal typing extend it from there.
+    if (wasEmptyRef.current && !isEmpty && highlightColor) {
+      const sel = window.getSelection()
+      const fullRange = document.createRange()
+      fullRange.selectNodeContents(ce)
+      sel?.removeAllRanges(); sel?.addRange(fullRange)
+      document.execCommand("hiliteColor", false, highlightColor)
+      const endRange = document.createRange()
+      endRange.selectNodeContents(ce)
+      endRange.collapse(false)
+      sel?.removeAllRanges(); sel?.addRange(endRange)
+    }
+    wasEmptyRef.current = isEmpty
+
+    setText(getTextWithLineBreaks(ce).slice(0, 200))
+    setHtml(normalizeHtml(ce.innerHTML))
+  }
+
   // ── Post ──────────────────────────────────────────────────────────────────
   async function handlePost() {
     if (!text.trim() || posting) return
@@ -424,9 +469,6 @@ export default function TaglineCreateStep({
   const boxLeft = boxPos.x * bw
   const boxTop  = boxPos.y * bh
 
-  // Scale factor for thumbnail clone: uniform because THUMB_W/boxW = THUMB_H/boxH (same aspect ratio)
-  const thumbScale = bw > 0 ? THUMB_W / boxW : 1
-
   const suggestedColors = ["#FFFFFF", "#000000", ...extractedColors]
   const btnBase: React.CSSProperties = {
     background: "#18181b", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 6,
@@ -434,6 +476,292 @@ export default function TaglineCreateStep({
   }
   const noSelect: React.CSSProperties = { userSelect: "none", WebkitUserSelect: "none" }
 
+  // Existing marks rendered on the full board (position at % of board, sized in board px)
+  function renderExistingOnBoard() {
+    return existingMarks.map(mark => {
+      const mBwf = mark.bwf ?? (BOX_FRAC / (mark.zoom ?? 1))
+      const mBhf = mark.bhf ?? (BOX_FRAC / (mark.zoom ?? 1))
+      const displayBoxW = mBwf * bw
+      const displayBoxH = mBhf * bh
+      const refW = (mark.creationBoxW && mark.creationBoxW > 0) ? mark.creationBoxW : displayBoxW
+      const refH = refW * (mBhf / mBwf) * 1.5
+      const refFontPx = mark.fontSize ? mark.fontSize * (refW / mBwf) * 1.5 : 14
+      const scale = displayBoxW / refW
+      const textStyle: React.CSSProperties = {
+        fontFamily: `"${mark.font ?? "sans-serif"}", sans-serif`,
+        fontSize: refFontPx,
+        color: mark.color ?? "#fff",
+        textAlign: "center",
+        lineHeight: 1.3,
+        wordBreak: "break-word",
+        whiteSpace: "pre-wrap",
+        width: "100%",
+      }
+      return (
+        <div key={mark.id} style={{ position: "absolute", left: `${mark.x * 100}%`, top: `${mark.y * 100}%`, width: displayBoxW, height: displayBoxH, overflow: "hidden", pointerEvents: "none" }}>
+          <div style={{ width: refW, height: refH, transform: `scale(${scale})`, transformOrigin: "top left", display: "flex", alignItems: "center", justifyContent: "center", padding: "3% 5%", boxSizing: "border-box" }}>
+            {mark.html
+              ? <div dangerouslySetInnerHTML={{ __html: mark.html }} style={textStyle} />
+              : <div style={textStyle}>{mark.text}</div>
+            }
+          </div>
+        </div>
+      )
+    })
+  }
+
+  // Existing marks rendered inside the box-cropped preview frame (positioned relative to the box's origin)
+  function renderExistingInPreview() {
+    return existingMarks.map(mark => {
+      const mBwf = mark.bwf ?? (BOX_FRAC / (mark.zoom ?? 1))
+      const mBhf = mark.bhf ?? (BOX_FRAC / (mark.zoom ?? 1))
+      const mFontSize = (mark.fontSize ?? 0.04) * bh
+      const mLeft = mark.x * bw - boxLeft
+      const mTop  = mark.y * bh - boxTop
+      const textStyle: React.CSSProperties = {
+        fontFamily: `"${mark.font ?? "sans-serif"}", sans-serif`,
+        fontSize: mFontSize, color: mark.color ?? "#fff",
+        textAlign: "center", lineHeight: 1.3,
+        wordBreak: "break-word", whiteSpace: "pre-wrap", width: "100%",
+      }
+      return (
+        <div key={mark.id} style={{
+          position: "absolute",
+          left: mLeft, top: mTop,
+          width: mBwf * bw, height: mBhf * bh,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "3% 5%", boxSizing: "border-box", overflow: "hidden",
+        }}>
+          {mark.html
+            ? <div dangerouslySetInnerHTML={{ __html: mark.html }} style={textStyle} />
+            : <div style={textStyle}>{mark.text}</div>
+          }
+        </div>
+      )
+    })
+  }
+
+  // The box-cropped preview frame — a scaled clone of the exact boxW × boxH region.
+  // `liveEdit` swaps the read-only text clone for the actual contentEditable field
+  // (used on mobile, where this frame IS the composing surface, not just a preview).
+  function renderPreviewFrame(targetW: number, liveEdit: boolean) {
+    const targetH = targetW * 1.5
+    const scale = bw > 0 ? targetW / boxW : 1
+    return (
+      <div style={{
+        width: targetW, height: targetH,
+        position: "relative", overflow: "hidden",
+        borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
+        background: "#111", flexShrink: 0,
+      }}>
+        {bw > 0 ? (
+          <div style={{
+            position: "absolute", top: 0, left: 0,
+            width: boxW, height: boxH,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            pointerEvents: liveEdit ? "auto" : "none",
+          }}>
+            <div style={{
+              position: "absolute", inset: 0,
+              backgroundImage: `url(${TMDB_ORIGINAL}${posterPath})`,
+              backgroundSize: `${bw}px ${bh}px`,
+              backgroundPosition: `${-boxLeft}px ${-boxTop}px`,
+              backgroundRepeat: "no-repeat",
+            }} />
+
+            {renderExistingInPreview()}
+
+            <div
+              style={{
+                position: "absolute", inset: 0, overflow: "hidden",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "3% 5%", background: "rgba(0,0,0,0.18)",
+                cursor: liveEdit ? "text" : "default",
+              }}
+              onClick={liveEdit ? () => contentEditableRef.current?.focus() : undefined}
+            >
+              {liveEdit ? (
+                <div
+                  ref={contentEditableRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={handleContentInput}
+                  style={{
+                    fontFamily: `"${FONT}", serif`,
+                    fontSize: manualFontSize,
+                    color: textColor,
+                    textAlign: "center",
+                    lineHeight: 1.3,
+                    wordBreak: "break-word",
+                    whiteSpace: "pre-wrap",
+                    outline: "none",
+                    caretColor: textColor,
+                    width: "100%",
+                    minHeight: "1em",
+                    background: "transparent",
+                    userSelect: "text",
+                    WebkitUserSelect: "text",
+                  }}
+                />
+              ) : (
+                <div
+                  dangerouslySetInnerHTML={{ __html: html || "" }}
+                  style={{
+                    fontFamily: `"${FONT}", serif`,
+                    fontSize: manualFontSize,
+                    color: textColor,
+                    textAlign: "center", lineHeight: 1.3,
+                    wordBreak: "break-word", whiteSpace: "pre-wrap",
+                    width: "100%",
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        ) : (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: "system-ui" }}>preview</span>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Compact top bar used on mobile — full labels/step-tracker crowd a phone width,
+  // so this collapses to just the back/exit buttons plus a short label.
+  function MobileTopBar({ onBackClick, label }: { onBackClick: () => void; label: string }) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 56, borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
+        <button onClick={onBackClick} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 38, height: 38, background: "#fff", border: "none", borderRadius: 10, color: "#000", cursor: "pointer", flexShrink: 0 }}>
+          <ArrowLeft size={18} />
+        </button>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "#a1a1aa" }}>{label}</span>
+        <button onClick={onExit} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 38, height: 38, background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 10, color: "#ef4444", cursor: "pointer", flexShrink: 0 }}>
+          <X size={18} />
+        </button>
+      </div>
+    )
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Mobile — step A: position only (drag the empty box on the full board)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (isMobile && mobileStep === "position") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#09090b" }}>
+        <MobileTopBar onBackClick={onBack} label="Position your tagline" />
+
+        <div
+          ref={boardContainerRef}
+          style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a", padding: 20 }}
+        >
+          {bw > 0 && (
+            <div style={{ width: bw, height: bh, position: "relative", flexShrink: 0, overflow: "visible", ...noSelect }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${TMDB_ORIGINAL}${posterPath}`}
+                alt=""
+                draggable={false}
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" }}
+              />
+
+              {renderExistingOnBoard()}
+
+              <div style={{
+                position: "absolute",
+                left: boxLeft, top: boxTop,
+                width: boxW, height: boxH,
+                border: "2px solid rgba(245,184,0,0.9)",
+                boxSizing: "border-box",
+                overflow: "visible",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(0,0,0,0.18)",
+              }}>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: "system-ui, sans-serif", textAlign: "center", padding: "0 6px" }}>
+                  Tagline goes here
+                </span>
+                <div
+                  onPointerDown={handleDragStart}
+                  onPointerMove={handleDragMove}
+                  onPointerUp={handleDragEnd}
+                  style={{
+                    position: "absolute",
+                    top: -26,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 44, height: 22,
+                    borderRadius: 6,
+                    background: "rgba(245,184,0,0.95)",
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center", gap: 3,
+                    cursor: "grab",
+                    zIndex: 20,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+                    ...noSelect,
+                  }}
+                >
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: 20, height: 2, borderRadius: 1, background: "rgba(255,255,255,0.9)" }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
+          <button
+            onClick={() => setMobileStep("compose")}
+            disabled={bw <= 0}
+            style={{ width: "100%", padding: "16px", borderRadius: 14, border: "none", background: bw > 0 ? "#fff" : "#27272a", color: bw > 0 ? "#000" : "#52525b", fontWeight: 700, fontSize: 16, cursor: bw > 0 ? "pointer" : "not-allowed" }}
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Mobile — step B: compose (write/style the tagline against the preview frame)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (isMobile && mobileStep === "compose") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#09090b" }}>
+        <MobileTopBar onBackClick={() => setMobileStep("position")} label="Write your tagline" />
+
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 20, padding: "20px 16px" }}>
+          <div ref={composeContainerRef} style={{ width: "100%", maxWidth: THUMB_W, display: "flex", justifyContent: "center" }}>
+            {renderPreviewFrame(composeW || 280, true)}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <ColorPalette value={textColor} onChange={applyTextColor} suggestedColors={suggestedColors} label="Text color" />
+            <ColorPalette value={highlightColor} onChange={applyHighlight} suggestedColors={suggestedColors} label="Highlight" noColor icon={<Highlighter size={18} />} />
+            <div style={{ width: 1, height: 32, background: "rgba(255,255,255,0.15)" }} />
+            <button onClick={() => setManualFontSize(v => Math.max(6, v - 2))} style={{ ...btnBase, width: 36, height: 36, fontSize: 20 }}>−</button>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", minWidth: 20, textAlign: "center" }}>{manualFontSize}</span>
+            <button onClick={() => setManualFontSize(v => Math.min(200, v + 2))} style={{ ...btnBase, width: 36, height: 36, fontSize: 20 }}>+</button>
+          </div>
+        </div>
+
+        <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
+          <button
+            onClick={handlePost}
+            disabled={!text.trim() || posting}
+            style={{ width: "100%", padding: "16px", borderRadius: 14, border: "none", background: text.trim() && !posting ? "#fff" : "#27272a", color: text.trim() && !posting ? "#000" : "#52525b", fontWeight: 700, fontSize: 16, cursor: text.trim() && !posting ? "pointer" : "not-allowed" }}
+          >
+            {posting ? "Posting…" : postLabel}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Desktop — combined board + editor + preview, unchanged
+  // ══════════════════════════════════════════════════════════════════════════
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#09090b" }}>
 
@@ -464,9 +792,9 @@ export default function TaglineCreateStep({
                 <ColorPalette value={textColor} onChange={applyTextColor} suggestedColors={suggestedColors} label="Text color" />
                 <ColorPalette value={highlightColor} onChange={applyHighlight} suggestedColors={suggestedColors} label="Highlight" noColor icon={<Highlighter size={18} />} />
                 <div style={{ width: 32, height: 1, background: "rgba(255,255,255,0.15)", margin: "2px 0" }} />
-                <button onClick={() => setManualFontSize(s => Math.min(200, s + 2))} style={{ ...btnBase, width: 40, height: 40, fontSize: 22 }}>+</button>
+                <button onClick={() => setManualFontSize(v => Math.min(200, v + 2))} style={{ ...btnBase, width: 40, height: 40, fontSize: 22 }}>+</button>
                 <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{manualFontSize}</span>
-                <button onClick={() => setManualFontSize(s => Math.max(6, s - 2))} style={{ ...btnBase, width: 40, height: 40, fontSize: 22 }}>−</button>
+                <button onClick={() => setManualFontSize(v => Math.max(6, v - 2))} style={{ ...btnBase, width: 40, height: 40, fontSize: 22 }}>−</button>
               </div>
 
             <div style={{ width: bw, height: bh, position: "relative", flexShrink: 0, overflow: "visible", ...noSelect }}>
@@ -482,53 +810,7 @@ export default function TaglineCreateStep({
 
               {/* Existing marks — rendered at creation pixel dimensions then scaled.
                   This makes layout independent of the current viewport/board size. */}
-              {existingMarks.map(mark => {
-                const mBwf = mark.bwf ?? (BOX_FRAC / (mark.zoom ?? 1))
-                const mBhf = mark.bhf ?? (BOX_FRAC / (mark.zoom ?? 1))
-                const displayBoxW = mBwf * bw
-                const displayBoxH = mBhf * bh
-
-                // Reference (creation) pixel width; fall back to current display width
-                const refW = (mark.creationBoxW && mark.creationBoxW > 0) ? mark.creationBoxW : displayBoxW
-                // Derive creation box height from the aspect ratio (bh/bw = 1.5 always)
-                const refH = refW * (mBhf / mBwf) * 1.5
-                // Derive original font size in px: fontSize_frac × bh_create = fontSize_frac × (refW/mBwf) × 1.5
-                const refFontPx = mark.fontSize ? mark.fontSize * (refW / mBwf) * 1.5 : 14
-                const scale = displayBoxW / refW
-
-                const textStyle: React.CSSProperties = {
-                  fontFamily: `"${mark.font ?? "sans-serif"}", sans-serif`,
-                  fontSize: refFontPx,
-                  color: mark.color ?? "#fff",
-                  textAlign: "center",
-                  lineHeight: 1.3,
-                  wordBreak: "break-word",
-                  whiteSpace: "pre-wrap",
-                  width: "100%",
-                }
-                return (
-                  <div key={mark.id} style={{
-                    position: "absolute",
-                    left: `${mark.x * 100}%`, top: `${mark.y * 100}%`,
-                    width: displayBoxW, height: displayBoxH,
-                    overflow: "hidden",
-                    pointerEvents: "none",
-                  }}>
-                    <div style={{
-                      width: refW, height: refH,
-                      transform: `scale(${scale})`,
-                      transformOrigin: "top left",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      padding: "3% 5%", boxSizing: "border-box",
-                    }}>
-                      {mark.html
-                        ? <div dangerouslySetInnerHTML={{ __html: mark.html }} style={textStyle} />
-                        : <div style={textStyle}>{mark.text}</div>
-                      }
-                    </div>
-                  </div>
-                )
-              })}
+              {renderExistingOnBoard()}
 
               {/* Draggable text box */}
               <div style={{
@@ -579,31 +861,7 @@ export default function TaglineCreateStep({
                     ref={contentEditableRef}
                     contentEditable
                     suppressContentEditableWarning
-                    onInput={e => {
-                      const ce = e.currentTarget
-                      const isEmpty = !ce.textContent
-
-                      // Priming the very first character(s) with the active highlight:
-                      // execCommand can't carry a "current format" into completely empty
-                      // content, but it reliably extends an existing highlighted span once
-                      // one exists — so apply it once right as content first appears, then
-                      // let normal typing extend it from there.
-                      if (wasEmptyRef.current && !isEmpty && highlightColor) {
-                        const sel = window.getSelection()
-                        const fullRange = document.createRange()
-                        fullRange.selectNodeContents(ce)
-                        sel?.removeAllRanges(); sel?.addRange(fullRange)
-                        document.execCommand("hiliteColor", false, highlightColor)
-                        const endRange = document.createRange()
-                        endRange.selectNodeContents(ce)
-                        endRange.collapse(false)
-                        sel?.removeAllRanges(); sel?.addRange(endRange)
-                      }
-                      wasEmptyRef.current = isEmpty
-
-                      setText(getTextWithLineBreaks(ce).slice(0, 200))
-                      setHtml(normalizeHtml(ce.innerHTML))
-                    }}
+                    onInput={handleContentInput}
                     style={{
                       fontFamily: `"${FONT}", serif`,
                       fontSize: manualFontSize,
@@ -643,86 +901,7 @@ export default function TaglineCreateStep({
               Text may render slightly differently on the poster — only the last 10 taglines appear on a poster
             </p>
           </div>
-          {/* Scaled clone of the exact boxW × boxH textbox region.
-              Same pixel dimensions as the textbox before scaling → identical word-wrap.
-              Existing marks are included so they show through the draggable box. */}
-          <div style={{
-            width: THUMB_W, height: THUMB_H,
-            position: "relative", overflow: "hidden",
-            borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
-            background: "#111", flexShrink: 0,
-          }}>
-            {bw > 0 ? (
-              <div style={{
-                position: "absolute", top: 0, left: 0,
-                width: boxW, height: boxH,
-                transform: `scale(${thumbScale})`,
-                transformOrigin: "top left",
-                pointerEvents: "none",
-              }}>
-                {/* Poster crop — background sized to full board, offset to show only the box region */}
-                <div style={{
-                  position: "absolute", inset: 0,
-                  backgroundImage: `url(${TMDB_ORIGINAL}${posterPath})`,
-                  backgroundSize: `${bw}px ${bh}px`,
-                  backgroundPosition: `${-boxLeft}px ${-boxTop}px`,
-                  backgroundRepeat: "no-repeat",
-                }} />
-
-                {/* Existing marks — positioned relative to the box's origin */}
-                {existingMarks.map(mark => {
-                  const mBwf = mark.bwf ?? (BOX_FRAC / (mark.zoom ?? 1))
-                  const mBhf = mark.bhf ?? (BOX_FRAC / (mark.zoom ?? 1))
-                  const mFontSize = (mark.fontSize ?? 0.04) * bh
-                  const mLeft = mark.x * bw - boxLeft
-                  const mTop  = mark.y * bh - boxTop
-                  const textStyle: React.CSSProperties = {
-                    fontFamily: `"${mark.font ?? "sans-serif"}", sans-serif`,
-                    fontSize: mFontSize, color: mark.color ?? "#fff",
-                    textAlign: "center", lineHeight: 1.3,
-                    wordBreak: "break-word", whiteSpace: "pre-wrap", width: "100%",
-                  }
-                  return (
-                    <div key={mark.id} style={{
-                      position: "absolute",
-                      left: mLeft, top: mTop,
-                      width: mBwf * bw, height: mBhf * bh,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      padding: "3% 5%", boxSizing: "border-box", overflow: "hidden",
-                    }}>
-                      {mark.html
-                        ? <div dangerouslySetInnerHTML={{ __html: mark.html }} style={textStyle} />
-                        : <div style={textStyle}>{mark.text}</div>
-                      }
-                    </div>
-                  )
-                })}
-
-                {/* Text overlay — exact same dimensions and font size as the live textbox */}
-                <div style={{
-                  position: "absolute", inset: 0, overflow: "hidden",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  padding: "3% 5%", background: "rgba(0,0,0,0.18)",
-                }}>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: html || "" }}
-                    style={{
-                      fontFamily: `"${FONT}", serif`,
-                      fontSize: manualFontSize,
-                      color: textColor,
-                      textAlign: "center", lineHeight: 1.3,
-                      wordBreak: "break-word", whiteSpace: "pre-wrap",
-                      width: "100%",
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: "system-ui" }}>preview</span>
-              </div>
-            )}
-          </div>
+          {renderPreviewFrame(THUMB_W, false)}
         </div>
 
       </div>
