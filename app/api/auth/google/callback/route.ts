@@ -1,4 +1,5 @@
 import { adminAuth } from "@/lib/firebase-admin"
+import { recordUserName } from "@/lib/directory"
 import { exchangeCodeForTokens, getRedirectUri, verifyGoogleIdToken } from "@/lib/google-oauth"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
@@ -21,11 +22,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const { id_token } = await exchangeCodeForTokens({ code, redirectUri: getRedirectUri(req) })
-    const { email, email_verified } = await verifyGoogleIdToken(id_token)
+    const { email, email_verified, name } = await verifyGoogleIdToken(id_token)
 
     if (!email_verified || !email.endsWith("@princeton.edu")) {
       return NextResponse.redirect(new URL("/unauthorized", req.url))
     }
+
+    // Remember the student's name so others can find their ranking by name. Never blocks signing in.
+    await recordUserName(email, name).catch(() => {})
 
     let uid: string
     try {

@@ -9,13 +9,18 @@ function LoginInner() {
   const signInHref = `/api/auth/google/start?callbackUrl=${encodeURIComponent(callbackUrl)}`
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="flex flex-col items-center gap-6 max-w-sm text-center px-6">
-        <h1 className="text-2xl font-bold text-white">Princeton USG Movies</h1>
-        <p className="text-zinc-400 text-sm">Sign in with your @princeton.edu Google account</p>
+    <div className="m-3 flex min-h-[calc(100dvh-24px)] flex-col border-2 border-black bg-white">
+      <header className="flex h-[88px] items-center justify-center bg-black text-3xl font-bold tracking-wide text-white sm:text-[40px]">
+        MOVIEMASH
+      </header>
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-16 text-center">
+        <div>
+          <p className="text-xl font-bold sm:text-2xl">Which Princeton movie would you rather watch?</p>
+          <p className="mt-1 text-base text-neutral-600">Sign in with your @princeton.edu Google account</p>
+        </div>
         <a
           href={signInHref}
-          className="flex items-center gap-3 bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-zinc-100 transition-colors"
+          className="flex items-center gap-3 border-2 border-black bg-white px-6 py-3 font-bold text-black transition-colors hover:bg-neutral-100"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

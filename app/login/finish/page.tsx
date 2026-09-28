@@ -43,8 +43,8 @@ export default function LoginFinishPage() {
   }, [])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <p className="text-zinc-400 text-sm">Signing in...</p>
+    <div className="flex min-h-screen items-center justify-center bg-white">
+      <p className="text-neutral-600">Signing in...</p>
     </div>
   )
 }

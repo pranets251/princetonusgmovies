@@ -1,116 +1,48 @@
 @import "tailwindcss";
 
-* {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-input, textarea {
-  caret-color: #F5B800;
-}
-
 :root {
-  --bg: #0f0f0f;
-  --card: #1a1a1a;
-  --border: #2a2a2a;
-}
-
-html {
-  font-size: 115%;
+  --ink: #111;
+  --muted: #666;
+  --line: #d4d4d4;
+  --bar: #000;
 }
 
 body {
-  background-color: var(--bg);
-  color: white;
-  font-family: var(--font-raleway), system-ui, sans-serif;
-  font-weight: 500;
+  /* Contain the frame's margins so the page is exactly one screen tall (no stray 12px of scroll). */
+  display: flow-root;
+  background: #fff;
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-@keyframes heartPop {
-  0%   { transform: scale(1); }
-  30%  { transform: scale(1.5); }
-  60%  { transform: scale(0.9); }
-  100% { transform: scale(1); }
-}
-.heart-pop { animation: heartPop 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
-
-/* Alternating movie/song title animation */
-@keyframes fadeOut {
-  0%, 40% { opacity: 1; }
-  50%, 90% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-@keyframes fadeIn {
-  0%, 40% { opacity: 0; }
-  50%, 90% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.title-movie {
-  animation: fadeOut 10s infinite;
-}
-
-.title-song {
-  animation: fadeIn 10s infinite;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-/* Pointer cursor on all interactive elements */
-button, a, [role="button"], label[for], select {
+button, a, [role="button"] {
   cursor: pointer;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-
-/* Video player */
-video {
-  display: block;
-  width: 100%;
-  background: #000;
+button:disabled {
+  cursor: not-allowed;
 }
 
-/* Hover overlays on tagline/movie cards: revealed on :hover state (desktop),
-   but forced permanently visible below md since touch devices have no hover */
-.hover-overlay {
-  opacity: 0;
-  transition: opacity 0.2s ease;
+/* Poster sizing shared by the matchup and Top 4 pages. Set --pw (poster width) on a parent. */
+.poster-lg {
+  width: var(--pw);
+  aspect-ratio: 2 / 3;
 }
-.hover-overlay.is-hovered {
-  opacity: 1;
-}
-@media (max-width: 767px) {
-  .hover-overlay {
-    opacity: 1 !important;
-  }
+.or-slot {
+  height: calc(var(--pw) * 1.5);
+  display: flex;
+  align-items: center;
 }
 
-/* Text inside those overlays: a touch smaller on mobile, since it's
-   permanently on screen there instead of only appearing on hover */
-@media (max-width: 767px) {
-  .overlay-text {
-    font-size: 11px !important;
-  }
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
 }
+.pop-in { animation: popIn 0.15s ease-out; }
 
-/* Contributors popup on the movie board modal: full-width sheet above the
-   button on mobile, side flyout on desktop */
-.contributors-popup {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 0;
-  right: 0;
-}
-@media (min-width: 768px) {
-  .contributors-popup {
-    bottom: 0;
-    left: calc(100% + 10px);
-    right: auto;
-    width: 210px;
-  }
+/* Home page captions: full size on big screens, scaling down with the poster on shorter ones so the page
+   still fits without scrolling (--pw is the poster width set on the matchup row). */
+@media (min-width: 1024px) {
+  .caption-title { font-size: clamp(13px, calc(var(--pw) * 0.075), 20px); }
+  .caption-sub { font-size: clamp(12px, calc(var(--pw) * 0.062), 18px); }
 }

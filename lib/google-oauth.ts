@@ -55,11 +55,15 @@ export async function exchangeCodeForTokens({
   return res.json()
 }
 
-export async function verifyGoogleIdToken(idToken: string): Promise<{ email: string; email_verified: boolean }> {
+export async function verifyGoogleIdToken(idToken: string): Promise<{ email: string; email_verified: boolean; name: string | null }> {
   const { payload } = await jwtVerify(idToken, googleJwks, {
     issuer: GOOGLE_ISSUER,
     audience: process.env.GOOGLE_OAUTH_CLIENT_ID!,
   })
   if (!payload.email || typeof payload.email !== "string") throw new Error("Google ID token missing email")
-  return { email: payload.email, email_verified: payload.email_verified === true }
+  return {
+    email: payload.email,
+    email_verified: payload.email_verified === true,
+    name: typeof payload.name === "string" && payload.name.trim() ? payload.name.trim().slice(0, 80) : null,
+  }
 }
