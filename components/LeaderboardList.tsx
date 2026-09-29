@@ -32,7 +32,7 @@ export default function LeaderboardList({ movies }: { movies: RankedMovie[] }) {
           onClick={() => setSearchingUsers(true)}
           className="flex shrink-0 items-center gap-2 border-2 border-black px-3 py-1 text-sm font-bold hover:bg-black hover:text-white"
         >
-          <Users size={16} /> Find individual user rankings
+          <Users size={16} /> Filter rankings by user
         </button>
       </div>
 

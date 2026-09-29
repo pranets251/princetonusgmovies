@@ -15,7 +15,7 @@ function LoginInner() {
       </header>
       <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-16 text-center">
         <div>
-          <p className="text-xl font-bold sm:text-2xl">Which Princeton movie would you rather watch?</p>
+          <p className="text-xl font-bold sm:text-2xl">Rank the movies you want USG Movies to screen at the Garden Theater</p>
           <p className="mt-1 text-base text-neutral-600">Sign in with your @princeton.edu Google account</p>
         </div>
         <a
